@@ -1,0 +1,306 @@
+:root {
+  --color-primary: #3cb3c0;
+  --color-primary-dark: #1a7175;
+  --color-bg: #f5f7f9;
+  --color-text: #22313f;
+  --color-muted: #7a8b9a;
+  --color-border: #e0e4ea;
+  --color-danger: #c0392b;
+  --radius-lg: 24px;
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.08);
+  --transition-fast: 0.2s ease-in-out;
+  --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-main);
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary), #ffffff);
+  color: var(--color-text);
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+/* App shell */
+
+.app-shell {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Views */
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+/* Card */
+
+.card {
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 24px 20px 20px;
+}
+
+/* Branding */
+
+.brand-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.brand-header .logo {
+  width: 140px;
+  height: auto;
+  margin-bottom: 8px;
+}
+
+.brand-header h1 {
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  letter-spacing: 0.02em;
+}
+
+/* Forms */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form.hidden {
+  display: none;
+}
+
+.form h2 {
+  font-size: 1rem;
+  margin: 8px 0 4px;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+label {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+input {
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(60, 179, 192, 0.2);
+}
+
+/* Botões */
+
+.btn {
+  border: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+    background-color var(--transition-fast), color var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(26, 113, 117, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(26, 113, 117, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(26, 113, 117, 0.3);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding-inline: 14px;
+}
+
+.btn-outline:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* WhatsApp */
+
+.btn-whatsapp {
+  margin-top: 16px;
+  width: 100%;
+  background-color: #25d366;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(37, 211, 102, 0.35);
+}
+
+.btn-whatsapp:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(37, 211, 102, 0.4);
+}
+
+/* Links em forma de botão simples */
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.form-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Mensagens */
+
+.form-info {
+  font-size: 0.8rem;
+  min-height: 1.2em;
+  color: var(--color-danger);
+}
+
+/* HOME */
+
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 8px 4px;
+  color: #ffffff;
+}
+
+.home-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-brand .logo.small {
+  width: 44px;
+  height: auto;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 4px;
+}
+
+.home-header h1 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.app-subtitle {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.8;
+}
+
+.home-card {
+  margin-top: 4px;
+}
+
+.home-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.home-text {
+  margin: 0 0 12px;
+  font-size: 0.86rem;
+  color: var(--color-muted);
+}
+
+.home-text.small {
+  font-size: 0.76rem;
+}
+
+/* Box de pontos */
+
+.points-box {
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: radial-gradient(circle at top left, rgba(60, 179, 192, 0.16), rgba(26, 113, 117, 0.04));
+  border: 1px solid rgba(60, 179, 192, 0.35);
+  margin-bottom: 10px;
+}
+
+.points-label {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+}
+
+.points-value {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+/* Responsivo */
+
+@media (min-width: 768px) {
+  .app-shell {
+    max-width: 520px;
+    padding-top: 40px;
+  }
+}

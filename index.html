@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Biovetfarma – Parceiro Veterinário</title>
+
+  <meta name="theme-color" content="#3CB3C0" />
+
+  <!-- Manifesto PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+
+  <!-- Ícones iOS -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- VIEW: AUTENTICAÇÃO -->
+    <main id="auth-view" class="view active">
+      <section class="card auth-card">
+        <div class="brand-header">
+          <img src="assets/logo-biovetfarma.png" alt="Biovetfarma" class="logo" />
+          <h1>Parceiro veterinário</h1>
+        </div>
+
+        <!-- Login -->
+        <form id="login-form" class="form">
+          <h2>Entrar</h2>
+
+          <label>
+            E-mail
+            <input type="email" id="login-email" required autocomplete="email" />
+          </label>
+
+          <label>
+            Senha
+            <input type="password" id="login-password" required autocomplete="current-password" />
+          </label>
+
+          <button type="submit" class="btn btn-primary">Entrar</button>
+
+          <p class="form-info" id="login-error"></p>
+
+          <div class="form-links">
+            <button type="button" id="show-reset" class="link-button">
+              Esqueceu a senha?
+            </button>
+            <button type="button" id="show-register" class="link-button">
+              Ainda não é cadastrado?
+            </button>
+          </div>
+        </form>
+
+        <!-- Cadastro -->
+        <form id="register-form" class="form hidden">
+          <h2>Criar cadastro</h2>
+
+          <label>
+            Nome completo
+            <input type="text" id="register-name" required />
+          </label>
+
+          <label>
+            CPF
+            <input type="text" id="register-cpf" required />
+          </label>
+
+          <label>
+            Data de nascimento
+            <input type="date" id="register-dob" required />
+          </label>
+
+          <label>
+            CRMV
+            <input type="text" id="register-crmv" required />
+          </label>
+
+          <label>
+            E-mail
+            <input type="email" id="register-email" required />
+          </label>
+
+          <label>
+            Senha
+            <input type="password" id="register-password" required />
+          </label>
+
+          <label>
+            Confirmar senha
+            <input type="password" id="register-password-confirm" required />
+          </label>
+
+          <button type="submit" class="btn btn-primary">Cadastrar</button>
+
+          <p class="form-info" id="register-error"></p>
+
+          <div class="form-links">
+            <button type="button" id="show-login-from-register" class="link-button">
+              Já tenho cadastro
+            </button>
+          </div>
+        </form>
+
+        <!-- Reset de senha -->
+        <form id="reset-form" class="form hidden">
+          <h2>Resetar senha</h2>
+
+          <label>
+            E-mail
+            <input type="email" id="reset-email" required />
+          </label>
+
+          <button type="submit" class="btn btn-primary">Enviar link de reset</button>
+
+          <p class="form-info" id="reset-info"></p>
+
+          <div class="form-links">
+            <button type="button" id="show-login-from-reset" class="link-button">
+              Voltar para login
+            </button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <!-- VIEW: HOME -->
+    <main id="home-view" class="view">
+      <header class="home-header">
+        <div class="home-brand">
+          <img src="assets/logo-biovetfarma.png" alt="Biovetfarma" class="logo small" />
+          <div>
+            <p class="app-subtitle">Programa</p>
+            <h1>Parceiro veterinário</h1>
+          </div>
+        </div>
+        <button id="logout-btn" class="btn btn-outline">Sair</button>
+      </header>
+
+      <section class="card home-card">
+        <h2>Bem-vindo(a), <span id="user-name">Parceiro</span></h2>
+        <p class="home-text">
+          Aqui você acompanha suas Biovet Milhas acumuladas.
+        </p>
+
+        <div class="points-box">
+          <p class="points-label">Biovet Milhas acumuladas</p>
+          <p class="points-value" id="points-value">Carregando...</p>
+        </div>
+
+        <p class="home-text small">
+          Os pontos são atualizados com base na sua participação e prescrições.
+        </p>
+
+        <a
+          id="whatsapp-link"
+          class="btn btn-whatsapp"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Trocar pontos
+        </a>
+      </section>
+    </main>
+  </div>
+
+  <!-- JS principal (Firebase + lógica) -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
