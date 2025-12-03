@@ -21,9 +21,12 @@ import {
 // =========================================
 
 const firebaseConfig = {
-  apiKey: 'SUA_API_KEY',
-  authDomain: 'SEU_PROJETO.firebaseapp.com',
-  projectId: 'SEU_PROJETO'
+  apiKey: "AIzaSyCW2HG6ECzk6OD0cenYqY1R3rsJ1Oecgek",
+  authDomain: "biovet-parceiro-vet.firebaseapp.com",
+  projectId: "biovet-parceiro-vet",
+  storageBucket: "biovet-parceiro-vet.firebasestorage.app",
+  messagingSenderId: "549792200166",
+  appId: "1:549792200166:web:0cf14a3895227b79031227"
 };
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/SUA_URL_WEBAPP/exec';
