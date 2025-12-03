@@ -29,7 +29,6 @@ const firebaseConfig = {
   appId: "1:549792200166:web:0cf14a3895227b79031227"
 };
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyY7uI6Qk0salgYXc2CND2CGHgEVn7WL0bIj_uTR-2ALDLMuXle0ACLZp_enL6kfnkk/exec';
 
 // =========================================
 // INICIALIZAÇÃO FIREBASE
@@ -179,7 +178,8 @@ registerForm.addEventListener('submit', async (e) => {
       cpf,
       dataNascimento,
       crmv,
-      email
+      email,
+      pontos: 0
     });
 
     // Após salvar no Firestore, cria (se não existir) a linha na planilha de pontos
@@ -254,20 +254,27 @@ async function carregarDadosHome(user) {
   try {
     let nome = user.displayName || '';
     let crmv = '';
+    let pontos = 0;
 
+    // Busca dados extras no Firestore
     const userDocRef = doc(db, 'users', user.uid);
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists()) {
       const data = userDocSnap.data();
+
       if (!nome && data.nome) {
         nome = data.nome;
       }
       if (data.crmv) {
         crmv = data.crmv;
       }
+      if (typeof data.pontos === 'number') {
+        pontos = data.pontos;
+      }
     }
 
+    // Se ainda não tiver nome, usa parte do e-mail
     if (!nome) {
       if (user.email) {
         nome = user.email.split('@')[0];
@@ -276,31 +283,17 @@ async function carregarDadosHome(user) {
       }
     }
 
+    // Nome na tela
     userNameSpan.textContent = nome;
 
+    // Link do WhatsApp
     const mensagem = encodeURIComponent(
       `Olá, sou o(a) Dr(a). ${nome} e gostaria de trocar minhas Biovet Milhas.`
     );
     whatsappLink.href = `https://wa.me/5514997132879?text=${mensagem}`;
 
-    if (!crmv) {
-      pointsValueEl.textContent = 'Cadastre seu CRMV para visualizar os pontos.';
-      return;
-    }
-
-    pointsValueEl.textContent = 'Carregando...';
-
-    const res = await fetch(`${APPS_SCRIPT_URL}?crmv=${encodeURIComponent(crmv)}`);
-    if (!res.ok) {
-      throw new Error('Erro ao buscar pontos.');
-    }
-    const data = await res.json();
-
-    if (data && data.success) {
-      pointsValueEl.textContent = `${data.pontos} pontos`;
-    } else {
-      pointsValueEl.textContent = '0 pontos';
-    }
+    // Exibe os pontos vindos do Firestore
+    pointsValueEl.textContent = `${pontos} pontos`;
   } catch (error) {
     console.error(error);
     pointsValueEl.textContent = 'Não foi possível carregar seus pontos.';
