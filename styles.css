@@ -55,7 +55,7 @@ body {
   display: block;
 }
 
-/* Card */
+/* Card padrão (usado só no login) */
 
 .card {
   background: rgba(255, 255, 255, 0.97);
@@ -256,23 +256,22 @@ input:focus {
   margin-top: 4px;
 }
 
-/* HOME – layout da seção (sem moldura branca) */
-.home-card {
-  margin-top: 4px;
-}
-
 /* CARTÃO BLACK COM OS DADOS DO FIRESTORE */
+
 .milhas-card {
   position: relative;
-  margin-top: 16px;
-  margin-bottom: 16px;
-  border-radius: 20px;
+  margin: 20px auto 24px;
+  width: 100%;
+  max-width: 430px;
+  aspect-ratio: 1.586; /* proporção cartão de crédito */
+  border-radius: 24px;
   overflow: hidden;
-  height: 190px;
-  background-image: url('assets/cartao-black.png'); /* ajuste o nome se precisar */
+  background-image: url('assets/cartao-black.png');
   background-size: cover;
   background-position: center;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  background-repeat: no-repeat;
+  background-color: #050608; /* fallback se a imagem não carregar */
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
   color: #f7f7f7;
   display: flex;
   align-items: stretch;
@@ -295,13 +294,13 @@ input:focus {
 }
 
 .milhas-program-label {
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.55);
   padding: 4px 10px;
   border-radius: 999px;
 }
 
 .milhas-card-middle {
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .milhas-points-label {
@@ -314,7 +313,7 @@ input:focus {
 
 .milhas-points-value {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   font-weight: 700;
 }
 
@@ -345,7 +344,6 @@ input:focus {
   overflow: hidden;
 }
 
-
 .home-card h2 {
   margin: 0 0 6px;
   font-size: 1.1rem;
@@ -360,9 +358,6 @@ input:focus {
 .home-text.small {
   font-size: 0.76rem;
 }
-
-/* Box de pontos */
-
 
 /* Responsivo */
 
