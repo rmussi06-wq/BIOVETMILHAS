@@ -363,28 +363,6 @@ input:focus {
 
 /* Box de pontos */
 
-.points-box {
-  border-radius: 18px;
-  padding: 14px 16px;
-  background: radial-gradient(circle at top left, rgba(60, 179, 192, 0.16), rgba(26, 113, 117, 0.04));
-  border: 1px solid rgba(60, 179, 192, 0.35);
-  margin-bottom: 10px;
-}
-
-.points-label {
-  margin: 0 0 4px;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-muted);
-}
-
-.points-value {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-primary-dark);
-}
 
 /* Responsivo */
 
