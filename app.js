@@ -73,6 +73,15 @@ const logoutBtn = document.getElementById('logout-btn');
 const userNameSpan = document.getElementById('user-name');
 const pointsValueEl = document.getElementById('points-value');
 const whatsappLink = document.getElementById('whatsapp-link');
+const logoutBtn = document.getElementById('logout-btn');
+const userNameSpan = document.getElementById('user-name');
+const pointsValueEl = document.getElementById('points-value');
+const whatsappLink = document.getElementById('whatsapp-link');
+
+// novos elementos do cartão
+const cardUserNameEl = document.getElementById('card-user-name');
+const cardUserCrmvEl = document.getElementById('card-user-crmv');
+
 
 // =========================================
 // TROCA DE VIEWS (LOGIN / HOME)
@@ -283,8 +292,16 @@ async function carregarDadosHome(user) {
       }
     }
 
-    // Nome na tela
+    // Texto de boas-vindas (fora do cartão)
     userNameSpan.textContent = nome;
+
+    // Dados dentro do cartão
+    if (cardUserNameEl) {
+      cardUserNameEl.textContent = nome;
+    }
+    if (cardUserCrmvEl) {
+      cardUserCrmvEl.textContent = crmv || '---';
+    }
 
     // Link do WhatsApp
     const mensagem = encodeURIComponent(
