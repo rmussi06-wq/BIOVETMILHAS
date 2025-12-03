@@ -29,6 +29,8 @@ const firebaseConfig = {
   appId: "1:549792200166:web:0cf14a3895227b79031227"
 };
 
+// Se você já tinha uma constante APPS_SCRIPT_URL, coloque o valor aqui
+const APPS_SCRIPT_URL = ''; // substitua pela sua URL do Apps Script
 
 // =========================================
 // INICIALIZAÇÃO FIREBASE
@@ -73,15 +75,10 @@ const logoutBtn = document.getElementById('logout-btn');
 const userNameSpan = document.getElementById('user-name');
 const pointsValueEl = document.getElementById('points-value');
 const whatsappLink = document.getElementById('whatsapp-link');
-const logoutBtn = document.getElementById('logout-btn');
-const userNameSpan = document.getElementById('user-name');
-const pointsValueEl = document.getElementById('points-value');
-const whatsappLink = document.getElementById('whatsapp-link');
 
 // novos elementos do cartão
 const cardUserNameEl = document.getElementById('card-user-name');
 const cardUserCrmvEl = document.getElementById('card-user-crmv');
-
 
 // =========================================
 // TROCA DE VIEWS (LOGIN / HOME)
@@ -128,7 +125,7 @@ showLoginFromRegisterBtn.addEventListener('click', showLoginForm);
 showLoginFromResetBtn.addEventListener('click', showLoginForm);
 
 // =========================================
-// LOGIN
+/* LOGIN */
 // =========================================
 
 loginForm.addEventListener('submit', async (e) => {
@@ -152,7 +149,7 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 // =========================================
-// CADASTRO
+/* CADASTRO */
 // =========================================
 
 registerForm.addEventListener('submit', async (e) => {
@@ -192,16 +189,16 @@ registerForm.addEventListener('submit', async (e) => {
     });
 
     // Após salvar no Firestore, cria (se não existir) a linha na planilha de pontos
-    try {
-      await fetch(
-        `${APPS_SCRIPT_URL}?acao=cadastro&crmv=${encodeURIComponent(crmv)}&nome=${encodeURIComponent(nome)}`
-      );
-    } catch (err) {
-      console.error('Erro ao criar linha na planilha de pontos:', err);
-      // Não trava o cadastro; se der erro aqui, você ainda pode criar a linha manualmente
+    if (APPS_SCRIPT_URL) {
+      try {
+        await fetch(
+          `${APPS_SCRIPT_URL}?acao=cadastro&crmv=${encodeURIComponent(crmv)}&nome=${encodeURIComponent(nome)}`
+        );
+      } catch (err) {
+        console.error('Erro ao criar linha na planilha de pontos:', err);
+      }
     }
 
-    
   } catch (error) {
     console.error(error);
     registerError.textContent = traduzErroAuth(error.code);
@@ -209,7 +206,7 @@ registerForm.addEventListener('submit', async (e) => {
 });
 
 // =========================================
-// RESET DE SENHA
+/* RESET DE SENHA */
 // =========================================
 
 resetForm.addEventListener('submit', async (e) => {
@@ -234,7 +231,7 @@ resetForm.addEventListener('submit', async (e) => {
 });
 
 // =========================================
-// LOGOUT
+/* LOGOUT */
 // =========================================
 
 logoutBtn.addEventListener('click', async () => {
@@ -242,7 +239,7 @@ logoutBtn.addEventListener('click', async () => {
 });
 
 // =========================================
-// OBSERVADOR DE AUTENTICAÇÃO
+/* OBSERVADOR DE AUTENTICAÇÃO */
 // =========================================
 
 onAuthStateChanged(auth, async (user) => {
@@ -256,7 +253,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // =========================================
-// CARREGAR NOME E PONTOS DA HOME
+/* CARREGAR NOME E PONTOS DA HOME */
 // =========================================
 
 async function carregarDadosHome(user) {
@@ -318,7 +315,7 @@ async function carregarDadosHome(user) {
 }
 
 // =========================================
-// TRADUÇÃO SIMPLES DE ERROS DE AUTH
+/* TRADUÇÃO SIMPLES DE ERROS DE AUTH */
 // =========================================
 
 function traduzErroAuth(code) {
@@ -341,7 +338,7 @@ function traduzErroAuth(code) {
 }
 
 // =========================================
-// SERVICE WORKER – PWA
+/* SERVICE WORKER – PWA */
 // =========================================
 
 if ('serviceWorker' in navigator) {
