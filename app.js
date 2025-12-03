@@ -29,7 +29,7 @@ const firebaseConfig = {
   appId: "1:549792200166:web:0cf14a3895227b79031227"
 };
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/SUA_URL_WEBAPP/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyY7uI6Qk0salgYXc2CND2CGHgEVn7WL0bIj_uTR-2ALDLMuXle0ACLZp_enL6kfnkk/exec';
 
 // =========================================
 // INICIALIZAÇÃO FIREBASE
