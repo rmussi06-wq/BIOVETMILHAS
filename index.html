@@ -140,11 +140,63 @@
         <button id="logout-btn" class="btn btn-outline">Sair</button>
       </header>
 
-      <section class="card home-card">
+      <main id="home-view" class="view">
+      <header class="home-header">
+        <div class="home-brand">
+          <img src="assets/logo-biovetfarma.png" alt="Biovetfarma" class="logo small" />
+          <div>
+            <p class="app-subtitle">Programa</p>
+            <h1>BIOVET MILHAS</h1>
+          </div>
+        </div>
+        <button id="logout-btn" class="btn btn-outline">Sair</button>
+      </header>
+
+      <!-- sem a classe .card (some a moldura branca) -->
+      <section class="home-card">
+        <!-- TEXTO FORA DO CARTÃO -->
         <h2>Bem-vindo(a), <span id="user-name">Parceiro</span></h2>
         <p class="home-text">
           Aqui você acompanha suas Biovet Milhas acumuladas.
         </p>
+
+        <!-- CARTÃO BLACK -->
+        <div class="milhas-card">
+          <div class="milhas-card-inner">
+            <div class="milhas-card-top">
+              <span class="milhas-program-label">Biovet Milhas</span>
+            </div>
+
+            <div class="milhas-card-middle">
+              <p class="milhas-points-label">Biovet Milhas acumuladas</p>
+              <p class="milhas-points-value" id="points-value">Carregando...</p>
+            </div>
+
+            <div class="milhas-card-bottom">
+              <div class="milhas-card-field">
+                <span class="milhas-field-label">Nome</span>
+                <span class="milhas-field-value" id="card-user-name">Parceiro</span>
+              </div>
+              <div class="milhas-card-field">
+                <span class="milhas-field-label">CRMV</span>
+                <span class="milhas-field-value" id="card-user-crmv">----</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTÃO FORA DO CARTÃO -->
+        <a
+          id="whatsapp-link"
+          class="btn btn-whatsapp"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Trocar pontos
+        </a>
+      </section>
+    </main>
+
 
         <div class="points-box">
           <p class="points-label">Biovet Milhas acumuladas</p>
