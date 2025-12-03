@@ -181,6 +181,18 @@ registerForm.addEventListener('submit', async (e) => {
       crmv,
       email
     });
+
+    // Após salvar no Firestore, cria (se não existir) a linha na planilha de pontos
+    try {
+      await fetch(
+        `${APPS_SCRIPT_URL}?acao=cadastro&crmv=${encodeURIComponent(crmv)}&nome=${encodeURIComponent(nome)}`
+      );
+    } catch (err) {
+      console.error('Erro ao criar linha na planilha de pontos:', err);
+      // Não trava o cadastro; se der erro aqui, você ainda pode criar a linha manualmente
+    }
+
+    
   } catch (error) {
     console.error(error);
     registerError.textContent = traduzErroAuth(error.code);
