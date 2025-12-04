@@ -371,7 +371,7 @@ input:focus {
 
 /* Aumentar somente a imagem do cartão sem alterar a moldura */
 .milhas-card {
-  background-size: 120%;     /* Aumente para 130%, 140% se quiser */
+  background-size: 150%;     /* Aumente para 130%, 140% se quiser */
   background-position: center;
 }
 
