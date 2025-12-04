@@ -368,10 +368,13 @@ input:focus {
   }
 }
 
-/* Aumentar somente a imagem do cartão, sem mexer na moldura */
-.card-image {
-  width: 120%;       /* Aumente aqui até ficar do tamanho desejado */
-  max-width: none;   /* Impede que o tamanho seja travado */
-  transform: translateX(-10%); /* Centraliza novamente após aumentar */
+
+/* Aumentar somente a imagem do cartão sem alterar a moldura */
+.milhas-card {
+  background-size: 120%;     /* Aumente para 130%, 140% se quiser */
+  background-position: center;
 }
+
+
+
 
