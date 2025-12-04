@@ -367,3 +367,11 @@ input:focus {
     padding-top: 40px;
   }
 }
+
+/* Aumentar somente a imagem do cartão, sem mexer na moldura */
+.card-image {
+  width: 120%;       /* Aumente aqui até ficar do tamanho desejado */
+  max-width: none;   /* Impede que o tamanho seja travado */
+  transform: translateX(-10%); /* Centraliza novamente após aumentar */
+}
+
