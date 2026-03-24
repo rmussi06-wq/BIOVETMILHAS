@@ -263,16 +263,13 @@ input:focus {
   margin: 20px auto 24px;
   width: 100%;
   max-width: 430px;
-  aspect-ratio: 1.586; /* proporção cartão de crédito */
+  aspect-ratio: 1.586;
   border-radius: 24px;
   overflow: hidden;
-  background-image: url('assets/cartao-black.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #050608; /* fallback se a imagem não carregar */
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
-  color: #f7f7f7;
+  background: linear-gradient(135deg, #ffffff, #f4f7f8);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  color: #22313f;
   display: flex;
   align-items: stretch;
 }
