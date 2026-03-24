@@ -1,13 +1,23 @@
 :root {
   --color-primary: #3cb3c0;
   --color-primary-dark: #1a7175;
+  --color-primary-deep: #13575b;
+  --color-accent: #22c55e;
+  --color-accent-dark: #16a34a;
   --color-bg: #f5f7f9;
+  --color-surface: rgba(255, 255, 255, 0.96);
+  --color-surface-strong: #ffffff;
   --color-text: #22313f;
+  --color-text-soft: #4f6272;
   --color-muted: #7a8b9a;
-  --color-border: #e0e4ea;
+  --color-border: rgba(255, 255, 255, 0.18);
   --color-danger: #c0392b;
-  --radius-lg: 24px;
-  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.08);
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.10);
+  --shadow-card: 0 28px 60px rgba(8, 34, 36, 0.22);
+  --shadow-button: 0 14px 28px rgba(22, 163, 74, 0.28);
   --transition-fast: 0.2s ease-in-out;
   --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -22,25 +32,28 @@ html,
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
   font-family: var(--font-main);
-  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary), #ffffff);
   color: var(--color-text);
   display: flex;
   justify-content: center;
   align-items: stretch;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.10), transparent 20%),
+    linear-gradient(135deg, var(--color-primary-deep) 0%, var(--color-primary) 55%, #9ed6dd 100%);
 }
 
 /* App */
 
 .app-shell {
   width: 100%;
-  max-width: 480px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 18px 18px 28px;
   display: flex;
   flex-direction: column;
 }
@@ -58,29 +71,32 @@ body {
 /* Card login */
 
 .card {
-  background: rgba(255, 255, 255, 0.97);
+  background: var(--color-surface);
+  backdrop-filter: blur(10px);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
-  padding: 24px 20px 20px;
+  padding: 26px 22px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 /* Branding */
 
 .brand-header {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .brand-header .logo {
-  width: 140px;
-  margin-bottom: 8px;
+  width: 144px;
+  margin-bottom: 10px;
 }
 
 .brand-header h1 {
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   margin: 0;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-primary-dark);
+  letter-spacing: -0.02em;
 }
 
 /* Forms */
@@ -88,7 +104,7 @@ body {
 .form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 13px;
 }
 
 .form.hidden {
@@ -97,13 +113,32 @@ body {
 
 label {
   font-size: 0.8rem;
-  color: var(--color-muted);
+  color: var(--color-text-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 500;
 }
 
 input {
-  padding: 10px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(34, 49, 63, 0.10);
+  background: #ffffff;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+input::placeholder {
+  color: #98a7b5;
+}
+
+input:focus {
+  border-color: rgba(60, 179, 192, 0.7);
+  box-shadow: 0 0 0 4px rgba(60, 179, 192, 0.16);
 }
 
 /* Botões */
@@ -111,20 +146,40 @@ input {
 .btn {
   border: none;
   cursor: pointer;
-  padding: 10px 16px;
-  border-radius: 999px;
-  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
   color: #fff;
+  box-shadow: var(--shadow-button);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 18px 34px rgba(22, 163, 74, 0.34);
 }
 
 .btn-outline {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.10);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* HOME */
@@ -132,65 +187,136 @@ input {
 .home-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
   color: #fff;
+  margin-bottom: 18px;
 }
 
 .home-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .home-brand .logo.small {
-  width: 44px;
-  background: #fff;
+  width: 48px;
+  background: rgba(255, 255, 255, 0.96);
   border-radius: 50%;
-  padding: 4px;
+  padding: 5px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================
-   CARD DE MILHAS (NOVO)
-========================= */
+.home-brand h1 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.app-subtitle {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.82;
+  font-weight: 600;
+}
+
+.home-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.95rem;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #163243;
+}
+
+.home-text {
+  margin: 0 0 18px;
+  font-size: 0.94rem;
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.5;
+}
+
+/* CARD DE MILHAS */
 
 .milhas-card {
-  margin: 20px auto;
-  max-width: 430px;
-  aspect-ratio: 1.586;
-  border-radius: 24px;
-  padding: 22px;
-
-  background: linear-gradient(135deg, #ffffff, #eef4f6);
-
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-
+  position: relative;
+  margin: 22px auto 28px;
+  width: 100%;
+  max-width: 440px;
+  min-height: 270px;
+  border-radius: 28px;
+  padding: 24px 22px 20px;
+  background:
+    radial-gradient(circle at top right, rgba(60, 179, 192, 0.12), transparent 26%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 248, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  overflow: hidden;
+}
+
+.milhas-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.34) 35%, transparent 70%);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.milhas-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* topo */
 
 .milhas-program-label {
-  display: inline-block;
-  background: rgba(60, 179, 192, 0.15);
-  color: #1a7175;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  background: rgba(26, 113, 117, 0.10);
+  color: var(--color-primary-dark);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid rgba(26, 113, 117, 0.10);
 }
 
 /* pontos */
 
+.milhas-card-middle {
+  margin-top: 8px;
+}
+
 .milhas-points-label {
-  font-size: 0.75rem;
+  margin: 0 0 8px;
+  font-size: 0.78rem;
   color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 700;
 }
 
 .milhas-points-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--color-primary-dark);
+  margin: 0;
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: var(--color-primary-deep);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 /* rodapé */
@@ -198,23 +324,111 @@ input {
 .milhas-card-bottom {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
+  align-items: flex-end;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.milhas-card-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .milhas-field-label {
   font-size: 0.7rem;
   color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 5px;
+  font-weight: 700;
 }
 
 .milhas-field-value {
-  font-weight: 600;
+  font-weight: 800;
+  font-size: 0.95rem;
   color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Botão principal abaixo do card */
+
+.btn-whatsapp,
+.home-card .btn-primary {
+  width: 100%;
+  min-height: 54px;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+/* Pequenos ajustes visuais */
+
+.form-info {
+  min-height: 1.2em;
+  font-size: 0.82rem;
+  color: var(--color-danger);
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.form-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* Responsivo */
 
 @media (min-width: 768px) {
   .app-shell {
-    max-width: 520px;
+    max-width: 540px;
+    padding-top: 32px;
+  }
+
+  .milhas-card {
+    max-width: 460px;
+  }
+}
+
+@media (max-width: 420px) {
+  .app-shell {
+    padding: 14px 14px 24px;
+  }
+
+  .home-card h2 {
+    font-size: 1.7rem;
+  }
+
+  .milhas-card {
+    padding: 20px 18px 18px;
+    min-height: 245px;
+  }
+
+  .milhas-points-value {
+    font-size: 2.2rem;
+  }
+
+  .milhas-field-value {
+    font-size: 0.86rem;
+  }
+
+  .btn {
+    padding: 11px 14px;
   }
 }
