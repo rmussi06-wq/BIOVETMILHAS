@@ -1,6 +1,6 @@
 {
-  "name": "Biovetfarma – Parceiro Veterinário",
-  "short_name": "Parceiro Vet",
+  "name": "Biovetfarma",
+  "short_name": "Biovetfarma",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#FFFFFF",
