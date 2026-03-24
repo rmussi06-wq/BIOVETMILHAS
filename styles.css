@@ -4,16 +4,12 @@
   --color-primary-deep: #13575b;
   --color-accent: #22c55e;
   --color-accent-dark: #16a34a;
-  --color-bg: #f5f7f9;
   --color-surface: rgba(255, 255, 255, 0.96);
-  --color-surface-strong: #ffffff;
   --color-text: #22313f;
   --color-text-soft: #4f6272;
   --color-muted: #7a8b9a;
-  --color-border: rgba(255, 255, 255, 0.18);
   --color-danger: #c0392b;
   --radius-lg: 28px;
-  --radius-md: 20px;
   --radius-pill: 999px;
   --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.10);
   --shadow-card: 0 28px 60px rgba(8, 34, 36, 0.22);
@@ -111,6 +107,12 @@ body {
   display: none;
 }
 
+.form h2 {
+  margin: 0 0 2px;
+  font-size: 1.02rem;
+  color: var(--color-primary-dark);
+}
+
 label {
   font-size: 0.8rem;
   color: var(--color-text-soft);
@@ -150,7 +152,11 @@ input:focus {
   border-radius: var(--radius-pill);
   font-weight: 700;
   font-size: 0.95rem;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast), background-color var(--transition-fast);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn:hover {
@@ -213,6 +219,7 @@ input:focus {
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
+  color: #ffffff;
 }
 
 .app-subtitle {
@@ -225,19 +232,24 @@ input:focus {
   font-weight: 600;
 }
 
+.home-card {
+  margin-top: 6px;
+}
+
 .home-card h2 {
-  margin: 0 0 6px;
-  font-size: 1.95rem;
-  line-height: 1.05;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: #163243;
+  margin: 0 0 8px;
+  font-size: 2.1rem;
+  line-height: 1.02;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: #ffffff;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
 }
 
 .home-text {
-  margin: 0 0 18px;
-  font-size: 0.94rem;
-  color: rgba(255, 255, 255, 0.74);
+  margin: 0 0 20px;
+  font-size: 0.96rem;
+  color: rgba(255, 255, 255, 0.82);
   line-height: 1.5;
 }
 
@@ -245,39 +257,64 @@ input:focus {
 
 .milhas-card {
   position: relative;
-  margin: 22px auto 28px;
+  margin: 24px auto 28px;
   width: 100%;
   max-width: 440px;
-  min-height: 270px;
-  border-radius: 28px;
-  padding: 24px 22px 20px;
-  background:
-    radial-gradient(circle at top right, rgba(60, 179, 192, 0.12), transparent 26%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 248, 0.96));
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  min-height: 280px;
+  border-radius: 30px;
   overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(60, 179, 192, 0.18), transparent 24%),
+    linear-gradient(145deg, #ffffff 0%, #f4fbfc 45%, #edf7f8 100%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 30px 70px rgba(8, 34, 36, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-.milhas-card::after {
+.milhas-card::before {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.34) 35%, transparent 70%);
-  opacity: 0.65;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.40) 35%, transparent 70%);
   pointer-events: none;
 }
 
-.milhas-card > * {
+.milhas-card-inner {
   position: relative;
   z-index: 1;
+  min-height: 280px;
+  height: 100%;
+  padding: 24px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-/* topo */
+.milhas-card-top {
+  display: flex;
+  align-items: center;
+}
+
+.milhas-card-middle {
+  margin-top: 10px;
+}
+
+.milhas-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.milhas-card-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* selo */
 
 .milhas-program-label {
   display: inline-flex;
@@ -285,7 +322,7 @@ input:focus {
   width: fit-content;
   background: rgba(26, 113, 117, 0.10);
   color: var(--color-primary-dark);
-  padding: 6px 12px;
+  padding: 7px 14px;
   border-radius: var(--radius-pill);
   font-size: 0.74rem;
   font-weight: 800;
@@ -296,12 +333,8 @@ input:focus {
 
 /* pontos */
 
-.milhas-card-middle {
-  margin-top: 8px;
-}
-
 .milhas-points-label {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-size: 0.78rem;
   color: var(--color-muted);
   text-transform: uppercase;
@@ -311,29 +344,15 @@ input:focus {
 
 .milhas-points-value {
   margin: 0;
-  font-size: 2.6rem;
+  font-size: 3rem;
   font-weight: 900;
-  line-height: 1;
+  line-height: 0.98;
   letter-spacing: -0.06em;
   color: var(--color-primary-deep);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 /* rodapé */
-
-.milhas-card-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 14px;
-  margin-top: 14px;
-}
-
-.milhas-card-field {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
 
 .milhas-field-label {
   font-size: 0.7rem;
@@ -353,17 +372,24 @@ input:focus {
   text-overflow: ellipsis;
 }
 
-/* Botão principal abaixo do card */
+/* Botão principal */
 
-.btn-whatsapp,
-.home-card .btn-primary {
+.btn-whatsapp {
   width: 100%;
-  min-height: 54px;
+  min-height: 56px;
   font-size: 1rem;
   letter-spacing: -0.01em;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+  color: #ffffff;
+  box-shadow: var(--shadow-button);
+  margin-top: 2px;
 }
 
-/* Pequenos ajustes visuais */
+.btn-whatsapp:hover {
+  box-shadow: 0 18px 34px rgba(22, 163, 74, 0.34);
+}
+
+/* Ajustes extras */
 
 .form-info {
   min-height: 1.2em;
@@ -412,16 +438,20 @@ input:focus {
   }
 
   .home-card h2 {
-    font-size: 1.7rem;
+    font-size: 1.75rem;
   }
 
   .milhas-card {
+    min-height: 250px;
+  }
+
+  .milhas-card-inner {
+    min-height: 250px;
     padding: 20px 18px 18px;
-    min-height: 245px;
   }
 
   .milhas-points-value {
-    font-size: 2.2rem;
+    font-size: 2.35rem;
   }
 
   .milhas-field-value {
