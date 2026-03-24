@@ -76,7 +76,6 @@ const userNameSpan = document.getElementById('user-name');
 const pointsValueEl = document.getElementById('points-value');
 const whatsappLink = document.getElementById('whatsapp-link');
 
-// novos elementos do cartão
 const cardUserNameEl = document.getElementById('card-user-name');
 const cardUserCrmvEl = document.getElementById('card-user-crmv');
 
@@ -116,7 +115,7 @@ function showResetForm() {
 }
 
 // =========================================
-// LISTENERS DE BOTOES DE TROCA
+// LISTENERS DE BOTÕES DE TROCA
 // =========================================
 
 showResetBtn.addEventListener('click', showResetForm);
@@ -125,7 +124,7 @@ showLoginFromRegisterBtn.addEventListener('click', showLoginForm);
 showLoginFromResetBtn.addEventListener('click', showLoginForm);
 
 // =========================================
-/* LOGIN */
+// LOGIN
 // =========================================
 
 loginForm.addEventListener('submit', async (e) => {
@@ -149,7 +148,7 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 // =========================================
-/* CADASTRO */
+// CADASTRO
 // =========================================
 
 registerForm.addEventListener('submit', async (e) => {
@@ -185,10 +184,10 @@ registerForm.addEventListener('submit', async (e) => {
       dataNascimento,
       crmv,
       email,
-      pontos: 0
+      pontos: 0,
+      approved: false
     });
 
-    // Após salvar no Firestore, cria (se não existir) a linha na planilha de pontos
     if (APPS_SCRIPT_URL) {
       try {
         await fetch(
@@ -199,6 +198,13 @@ registerForm.addEventListener('submit', async (e) => {
       }
     }
 
+    await signOut(auth);
+
+    showAuthView();
+    showLoginForm();
+    loginError.textContent = 'Cadastro realizado. Aguarde aprovação para acessar.';
+
+    registerForm.reset();
   } catch (error) {
     console.error(error);
     registerError.textContent = traduzErroAuth(error.code);
@@ -206,7 +212,7 @@ registerForm.addEventListener('submit', async (e) => {
 });
 
 // =========================================
-/* RESET DE SENHA */
+// RESET DE SENHA
 // =========================================
 
 resetForm.addEventListener('submit', async (e) => {
@@ -231,7 +237,7 @@ resetForm.addEventListener('submit', async (e) => {
 });
 
 // =========================================
-/* LOGOUT */
+// LOGOUT
 // =========================================
 
 logoutBtn.addEventListener('click', async () => {
@@ -239,13 +245,41 @@ logoutBtn.addEventListener('click', async () => {
 });
 
 // =========================================
-/* OBSERVADOR DE AUTENTICAÇÃO */
+// OBSERVADOR DE AUTENTICAÇÃO
 // =========================================
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    showHomeView();
-    await carregarDadosHome(user);
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        await signOut(auth);
+        showAuthView();
+        showLoginForm();
+        loginError.textContent = 'Cadastro não encontrado.';
+        return;
+      }
+
+      const data = userDocSnap.data();
+
+      if (data.approved === true) {
+        showHomeView();
+        await carregarDadosHome(user);
+      } else {
+        await signOut(auth);
+        showAuthView();
+        showLoginForm();
+        loginError.textContent = 'Seu cadastro ainda não foi aprovado.';
+      }
+    } catch (error) {
+      console.error(error);
+      await signOut(auth);
+      showAuthView();
+      showLoginForm();
+      loginError.textContent = 'Erro ao validar cadastro.';
+    }
   } else {
     showAuthView();
     showLoginForm();
@@ -253,7 +287,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // =========================================
-/* CARREGAR NOME E PONTOS DA HOME */
+// CARREGAR NOME E PONTOS DA HOME
 // =========================================
 
 async function carregarDadosHome(user) {
@@ -262,7 +296,6 @@ async function carregarDadosHome(user) {
     let crmv = '';
     let pontos = 0;
 
-    // Busca dados extras no Firestore
     const userDocRef = doc(db, 'users', user.uid);
     const userDocSnap = await getDoc(userDocRef);
 
@@ -272,41 +305,35 @@ async function carregarDadosHome(user) {
       if (!nome && data.nome) {
         nome = data.nome;
       }
+
       if (data.crmv) {
         crmv = data.crmv;
       }
+
       if (typeof data.pontos === 'number') {
         pontos = data.pontos;
       }
     }
 
-    // Se ainda não tiver nome, usa parte do e-mail
     if (!nome) {
-      if (user.email) {
-        nome = user.email.split('@')[0];
-      } else {
-        nome = 'Parceiro';
-      }
+      nome = user.email ? user.email.split('@')[0] : 'Parceiro';
     }
 
-    // Texto de boas-vindas (fora do cartão)
     userNameSpan.textContent = nome;
 
-    // Dados dentro do cartão
     if (cardUserNameEl) {
       cardUserNameEl.textContent = nome;
     }
+
     if (cardUserCrmvEl) {
       cardUserCrmvEl.textContent = crmv || '---';
     }
 
-    // Link do WhatsApp
     const mensagem = encodeURIComponent(
       `Olá, sou o(a) Dr(a). ${nome} e gostaria de trocar minhas Biovet Milhas.`
     );
     whatsappLink.href = `https://wa.me/5514997132879?text=${mensagem}`;
 
-    // Exibe os pontos vindos do Firestore
     pointsValueEl.textContent = `${pontos} pontos`;
   } catch (error) {
     console.error(error);
@@ -315,7 +342,7 @@ async function carregarDadosHome(user) {
 }
 
 // =========================================
-/* TRADUÇÃO SIMPLES DE ERROS DE AUTH */
+// TRADUÇÃO SIMPLES DE ERROS DE AUTH
 // =========================================
 
 function traduzErroAuth(code) {
@@ -332,13 +359,15 @@ function traduzErroAuth(code) {
       return 'E-mail já cadastrado.';
     case 'auth/weak-password':
       return 'Senha muito fraca. Use pelo menos 6 caracteres.';
+    case 'auth/invalid-credential':
+      return 'E-mail ou senha incorretos.';
     default:
       return 'Ocorreu um erro. Tente novamente.';
   }
 }
 
 // =========================================
-/* SERVICE WORKER – PWA */
+// SERVICE WORKER – PWA
 // =========================================
 
 if ('serviceWorker' in navigator) {
