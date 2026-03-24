@@ -34,7 +34,7 @@ body {
   align-items: stretch;
 }
 
-/* App shell */
+/* App */
 
 .app-shell {
   width: 100%;
@@ -55,7 +55,7 @@ body {
   display: block;
 }
 
-/* Card padrão (usado só no login) */
+/* Card login */
 
 .card {
   background: rgba(255, 255, 255, 0.97);
@@ -73,7 +73,6 @@ body {
 
 .brand-header .logo {
   width: 140px;
-  height: auto;
   margin-bottom: 8px;
 }
 
@@ -82,7 +81,6 @@ body {
   margin: 0;
   font-weight: 700;
   color: var(--color-primary-dark);
-  letter-spacing: 0.02em;
 }
 
 /* Forms */
@@ -97,33 +95,15 @@ body {
   display: none;
 }
 
-.form h2 {
-  font-size: 1rem;
-  margin: 8px 0 4px;
-  font-weight: 600;
-  color: var(--color-primary-dark);
-}
-
 label {
   font-size: 0.8rem;
   color: var(--color-muted);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
 input {
   padding: 10px 12px;
   border-radius: 999px;
   border: 1px solid var(--color-border);
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(60, 179, 192, 0.2);
 }
 
 /* Botões */
@@ -133,96 +113,26 @@ input:focus {
   cursor: pointer;
   padding: 10px 16px;
   border-radius: 999px;
-  font-size: 0.9rem;
   font-weight: 600;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast),
-    background-color var(--transition-fast), color var(--transition-fast);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
-  color: #ffffff;
-  box-shadow: 0 10px 22px rgba(26, 113, 117, 0.35);
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px rgba(26, 113, 117, 0.4);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-  box-shadow: 0 6px 16px rgba(26, 113, 117, 0.3);
+  color: #fff;
 }
 
 .btn-outline {
-  background-color: transparent;
-  color: #ffffff;
+  background: transparent;
+  color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.6);
-  padding-inline: 14px;
-}
-
-.btn-outline:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-/* WhatsApp */
-
-.btn-whatsapp {
-  margin-top: 16px;
-  width: 100%;
-  background-color: #25d366;
-  color: #ffffff;
-  box-shadow: 0 10px 22px rgba(37, 211, 102, 0.35);
-}
-
-.btn-whatsapp:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px rgba(37, 211, 102, 0.4);
-}
-
-/* Links em forma de botão simples */
-
-.link-button {
-  border: none;
-  background: none;
-  padding: 0;
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--color-primary-dark);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.form-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-/* Mensagens */
-
-.form-info {
-  font-size: 0.8rem;
-  min-height: 1.2em;
-  color: var(--color-danger);
 }
 
 /* HOME */
 
 .home-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding: 8px 4px;
-  color: #ffffff;
+  color: #fff;
 }
 
 .home-brand {
@@ -233,127 +143,72 @@ input:focus {
 
 .home-brand .logo.small {
   width: 44px;
-  height: auto;
-  border-radius: 999px;
-  background: #ffffff;
+  background: #fff;
+  border-radius: 50%;
   padding: 4px;
 }
 
-.home-header h1 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.app-subtitle {
-  margin: 0;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  opacity: 0.8;
-}
-
-.home-card {
-  margin-top: 4px;
-}
-
-/* CARTÃO BLACK COM OS DADOS DO FIRESTORE */
+/* =========================
+   CARD DE MILHAS (NOVO)
+========================= */
 
 .milhas-card {
-  position: relative;
-  margin: 20px auto 24px;
-  width: 100%;
+  margin: 20px auto;
   max-width: 430px;
   aspect-ratio: 1.586;
   border-radius: 24px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #ffffff, #f4f7f8);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-  color: #22313f;
-  display: flex;
-  align-items: stretch;
-}
+  padding: 22px;
 
-.milhas-card-inner {
-  padding: 20px 22px;
+  background: linear-gradient(135deg, #ffffff, #eef4f6);
+
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 100%;
-  height: 100%;
 }
 
-.milhas-card-top {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  opacity: 0.9;
-}
+/* topo */
 
 .milhas-program-label {
-  background: rgba(0, 0, 0, 0.55);
-  padding: 4px 10px;
+  display: inline-block;
+  background: rgba(60, 179, 192, 0.15);
+  color: #1a7175;
+  padding: 5px 12px;
   border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
-.milhas-card-middle {
-  margin-top: 8px;
-}
+/* pontos */
 
 .milhas-points-label {
-  margin: 0 0 4px;
   font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  opacity: 0.8;
+  color: var(--color-muted);
 }
 
 .milhas-points-value {
-  margin: 0;
-  font-size: 1.9rem;
+  font-size: 2rem;
   font-weight: 700;
+  color: var(--color-primary-dark);
 }
+
+/* rodapé */
 
 .milhas-card-bottom {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  font-size: 0.75rem;
-}
-
-.milhas-card-field {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  font-size: 0.8rem;
 }
 
 .milhas-field-label {
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  opacity: 0.7;
-  margin-bottom: 2px;
+  font-size: 0.7rem;
+  color: var(--color-muted);
 }
 
 .milhas-field-value {
   font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-.home-card h2 {
-  margin: 0 0 6px;
-  font-size: 1.1rem;
-}
-
-.home-text {
-  margin: 0 0 12px;
-  font-size: 0.86rem;
-  color: var(--color-muted);
-}
-
-.home-text.small {
-  font-size: 0.76rem;
+  color: var(--color-text);
 }
 
 /* Responsivo */
@@ -361,17 +216,5 @@ input:focus {
 @media (min-width: 768px) {
   .app-shell {
     max-width: 520px;
-    padding-top: 40px;
   }
 }
-
-
-/* Aumentar somente a imagem do cartão sem alterar a moldura */
-.milhas-card {
-  background-size: 150%;     /* Aumente para 130%, 140% se quiser */
-  background-position: center;
-}
-
-
-
-
