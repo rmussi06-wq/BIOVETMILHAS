@@ -1,4 +1,4 @@
-const CACHE_NAME = 'biovet-parceiro-v2';
+const CACHE_NAME = 'biovet-parceiro-v4';
 
 const ASSETS = [
   './',
