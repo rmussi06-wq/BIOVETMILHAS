@@ -40,6 +40,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Flag para evitar corrida entre cadastro e onAuthStateChanged
+let isRegistering = false;
+
 // =========================================
 // ELEMENTOS DE TELA
 // =========================================
@@ -143,7 +146,7 @@ loginForm.addEventListener('submit', async (e) => {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
     console.error(error);
-    loginError.textContent = traduzErroAuth(error.code);
+    loginError.textContent = traduzErro(error.code);
   }
 });
 
@@ -174,6 +177,8 @@ registerForm.addEventListener('submit', async (e) => {
   }
 
   try {
+    isRegistering = true;
+
     const cred = await createUserWithEmailAndPassword(auth, email, senha);
 
     await updateProfile(cred.user, { displayName: nome });
@@ -198,16 +203,19 @@ registerForm.addEventListener('submit', async (e) => {
       }
     }
 
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     await signOut(auth);
 
     showAuthView();
     showLoginForm();
     loginError.textContent = 'Cadastro realizado. Aguarde aprovação para acessar.';
-
     registerForm.reset();
   } catch (error) {
-    console.error(error);
-    registerError.textContent = traduzErroAuth(error.code);
+    console.error('Erro no cadastro:', error);
+    registerError.textContent = traduzErro(error.code);
+  } finally {
+    isRegistering = false;
   }
 });
 
@@ -232,7 +240,7 @@ resetForm.addEventListener('submit', async (e) => {
   } catch (error) {
     console.error(error);
     resetInfo.style.color = '#c0392b';
-    resetInfo.textContent = traduzErroAuth(error.code);
+    resetInfo.textContent = traduzErro(error.code);
   }
 });
 
@@ -249,6 +257,8 @@ logoutBtn.addEventListener('click', async () => {
 // =========================================
 
 onAuthStateChanged(auth, async (user) => {
+  if (isRegistering) return;
+
   if (user) {
     try {
       const userDocRef = doc(db, 'users', user.uid);
@@ -342,10 +352,10 @@ async function carregarDadosHome(user) {
 }
 
 // =========================================
-// TRADUÇÃO SIMPLES DE ERROS DE AUTH
+// TRADUÇÃO DE ERROS
 // =========================================
 
-function traduzErroAuth(code) {
+function traduzErro(code) {
   switch (code) {
     case 'auth/invalid-email':
       return 'E-mail inválido.';
@@ -361,6 +371,9 @@ function traduzErroAuth(code) {
       return 'Senha muito fraca. Use pelo menos 6 caracteres.';
     case 'auth/invalid-credential':
       return 'E-mail ou senha incorretos.';
+    case 'permission-denied':
+    case 'firestore/permission-denied':
+      return 'Sem permissão para gravar no Firestore.';
     default:
       return 'Ocorreu um erro. Tente novamente.';
   }
