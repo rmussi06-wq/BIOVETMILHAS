@@ -2,191 +2,104 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>Biovetfarma</title>
-
-  <meta name="theme-color" content="#3CB3C0" />
-
-  <!-- Manifesto PWA -->
-  <link rel="manifest" href="manifest.webmanifest" />
-
-  <!-- Ícones iOS -->
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-
-  <!-- CSS principal -->
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Biovet Milhas</title>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
+
 <body>
-  <div class="app-shell">
-    <!-- VIEW: AUTENTICAÇÃO -->
-    <main id="auth-view" class="view active">
-      <section class="card auth-card">
-        <div class="brand-header">
-          <img src="assets/logo-biovetfarma.png" alt="Biovetfarma" class="logo" />
-          <h1>BIOVET MILHAS</h1>
-        </div>
 
-        <!-- Login -->
-        <form id="login-form" class="form">
-          <h2>Entrar</h2>
+<!-- BOOT -->
+<div id="boot-screen" class="screen active">
+  <img src="assets/logo-biovetfarma.png" class="logo">
+  <h1>Biovet Milhas</h1>
+  <p>Carregando...</p>
+</div>
 
-          <label>
-            E-mail
-            <input type="email" id="login-email" required autocomplete="email" />
-          </label>
-
-          <label>
-            Senha
-            <input type="password" id="login-password" required autocomplete="current-password" />
-          </label>
-
-          <button type="submit" class="btn btn-primary">Entrar</button>
-
-          <p class="form-info" id="login-error"></p>
-
-          <div class="form-links">
-            <button type="button" id="show-reset" class="link-button">
-              Esqueceu a senha?
-            </button>
-            <button type="button" id="show-register" class="link-button">
-              Ainda não é cadastrado?
-            </button>
-          </div>
-        </form>
-
-        <!-- Cadastro -->
-        <form id="register-form" class="form hidden">
-          <h2>Criar cadastro</h2>
-
-          <label>
-            Nome completo
-            <input type="text" id="register-name" required />
-          </label>
-
-          <label>
-            CPF
-            <input type="text" id="register-cpf" required />
-          </label>
-
-          <label>
-            Data de nascimento
-            <input type="date" id="register-dob" required />
-          </label>
-
-          <label>
-            CRMV
-            <input type="text" id="register-crmv" required />
-          </label>
-
-          <label>
-            E-mail
-            <input type="email" id="register-email" required />
-          </label>
-
-          <label>
-            Senha
-            <input type="password" id="register-password" required />
-          </label>
-
-          <label>
-            Confirmar senha
-            <input type="password" id="register-password-confirm" required />
-          </label>
-
-          <button type="submit" class="btn btn-primary">Cadastrar</button>
-
-          <p class="form-info" id="register-error"></p>
-
-          <div class="form-links">
-            <button type="button" id="show-login-from-register" class="link-button">
-              Já tenho cadastro
-            </button>
-          </div>
-        </form>
-
-        <!-- Reset de senha -->
-        <form id="reset-form" class="form hidden">
-          <h2>Resetar senha</h2>
-
-          <label>
-            E-mail
-            <input type="email" id="reset-email" required />
-          </label>
-
-          <button type="submit" class="btn btn-primary">Enviar link de reset</button>
-
-          <p class="form-info" id="reset-info"></p>
-
-          <div class="form-links">
-            <button type="button" id="show-login-from-reset" class="link-button">
-              Voltar para login
-            </button>
-          </div>
-        </form>
-      </section>
-    </main>
-
-    <!-- VIEW: HOME -->
-    <main id="home-view" class="view">
-      <header class="home-header">
-        <div class="home-brand">
-          <img src="assets/logo-biovetfarma.png" alt="Biovetfarma" class="logo small" />
-          <div>
-            <p class="app-subtitle">Programa</p>
-            <h1>BIOVET MILHAS</h1>
-          </div>
-        </div>
-        <button id="logout-btn" class="btn btn-outline">Sair</button>
-      </header>
-
-      <!-- sem a classe .card (some a moldura branca) -->
-      <section class="home-card">
-        <!-- TEXTO FORA DO CARTÃO -->
-        <h2>Bem-vindo(a), <span id="user-name">Parceiro</span></h2>
-        <p class="home-text">
-          Aqui você acompanha suas Biovet Milhas acumuladas.
-        </p>
-
-        <!-- CARTÃO BLACK -->
-        <div class="milhas-card">
-          <div class="milhas-card-inner">
-            <div class="milhas-card-top">
-              <span class="milhas-program-label">Biovet Milhas</span>
-            </div>
-
-            <div class="milhas-card-middle">
-              <p class="milhas-points-label">Biovet Milhas acumuladas</p>
-              <p class="milhas-points-value" id="points-value">Carregando...</p>
-            </div>
-
-            <div class="milhas-card-bottom">
-              <div class="milhas-card-field">
-                <span class="milhas-field-label">Nome</span>
-                <span class="milhas-field-value" id="card-user-name">Parceiro</span>
-              </div>
-              <div class="milhas-card-field">
-                <span class="milhas-field-label">CRMV</span>
-                <span class="milhas-field-value" id="card-user-crmv">----</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- BOTÃO FORA DO CARTÃO -->
-        <a
-          id="whatsapp-link"
-          class="btn btn-whatsapp"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Trocar pontos
-        </a>
-      </section>
-    </main>
+<!-- LOGIN -->
+<div id="login-screen" class="screen">
+  <div class="card">
+    <h2>Entrar</h2>
+    <input type="text" id="email" placeholder="Email">
+    <input type="password" id="senha" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
   </div>
+</div>
 
-  <!-- JS principal (Firebase + lógica) -->
-  <script type="module" src="app.js"></script>
+<!-- TRANSIÇÃO -->
+<div id="transition-screen" class="screen">
+  <div class="transition-card">
+    <div class="transition-glow"></div>
+    <img src="assets/logo-biovetfarma.png" class="transition-logo">
+
+    <h2 class="transition-title">Preparando suas milhas</h2>
+    <p class="transition-subtitle">Buscando seus pontos...</p>
+
+    <div class="magic-loader">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="screen">
+  <div class="card">
+    <h2>Bem-vindo</h2>
+    <h1 id="pontos">0</h1>
+    <p>Biovet Milhas</p>
+    <button>Trocar pontos</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+
+<script>
+const boot = document.getElementById("boot-screen");
+const loginScreen = document.getElementById("login-screen");
+const transition = document.getElementById("transition-screen");
+const app = document.getElementById("app-screen");
+
+function show(screen){
+  [boot, loginScreen, transition, app].forEach(s=>{
+    s.classList.remove("active");
+  });
+  screen.classList.add("active");
+}
+
+function init(){
+  show(boot);
+
+  setTimeout(()=>{
+    const user = localStorage.getItem("user");
+
+    if(user){
+      goToApp();
+    } else {
+      show(loginScreen);
+    }
+
+  }, 800);
+}
+
+function login(){
+  localStorage.setItem("user","ok");
+  goToApp();
+}
+
+async function goToApp(){
+  show(transition);
+
+  await new Promise(r => setTimeout(r, 1200));
+
+  document.getElementById("pontos").innerText = "1200";
+
+  show(app);
+}
+
+init();
+</script>
+
 </body>
 </html>
