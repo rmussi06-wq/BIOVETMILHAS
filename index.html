@@ -8,106 +8,114 @@
 </head>
 
 <body>
-  
-  <div id="boot-overlay" class="bm-overlay is-hidden">
-  <div class="bm-loader-wrap">
-    <div class="bm-glow"></div>
-    <img src="./assets/logo-biovetfarma.png" alt="Biovetfarma" class="bm-loader-logo">
-    <div class="bm-ring"></div>
-    <div class="bm-loader-text">Preparando as suas milhas...</div>
-    <div class="bm-loader-subtext">Entrando no seu painel</div>
-  </div>
-</div>
-
-<!-- BOOT -->
-<div id="boot-screen" class="screen active">
-  <img src="assets/logo-biovetfarma.png" class="logo">
-</div>
-
-<!-- LOGIN -->
-<div id="login-screen" class="screen">
-  <div class="card">
-    <h2>Entrar</h2>
-    <input type="text" id="email" placeholder="Email">
-    <input type="password" id="senha" placeholder="Senha">
-    <button onclick="login()">Entrar</button>
-  </div>
-</div>
-
-<!-- TRANSIÇÃO -->
-<div id="transition-screen" class="screen">
-  <div class="transition-card">
-    <div class="transition-glow"></div>
-    <img src="assets/logo-biovetfarma.png" class="transition-logo">
-
-    <h2 class="transition-title">Preparando as suas milhas</h2>
-    <p class="transition-subtitle">Buscando seus pontos...</p>
-
-    <div class="magic-loader">
-      <span></span>
-      <span></span>
-      <span></span>
+  <div id="transition-screen" class="screen active transition-screen">
+    <div class="transition-card">
+      <img src="assets/logo-biovetfarma.png" class="transition-logo" alt="Biovetfarma">
+      <h2 class="transition-title">Preparando as suas milhas</h2>
+      <p class="transition-subtitle">Buscando seus dados...</p>
+      <div class="magic-loader"><span></span><span></span><span></span></div>
     </div>
   </div>
-</div>
 
-<!-- APP -->
-<div id="app-screen" class="screen">
-  <div class="card">
-    <h2>Bem-vindo</h2>
-    <h1 id="pontos">0</h1>
-    <p>Biovet Milhas</p>
-    <button>Trocar pontos</button>
-  </div>
-</div>
+  <section id="auth-view" class="view">
+    <div class="panel">
+      <img src="assets/logo-biovetfarma.png" class="brand-logo" alt="Biovetfarma">
 
-<script src="app.js"></script>
+      <form id="login-form" class="form">
+        <h2>Entrar</h2>
+        <label for="login-email">E-mail</label>
+        <input id="login-email" type="email" autocomplete="email" required />
+        <label for="login-password">Senha</label>
+        <input id="login-password" type="password" autocomplete="current-password" required />
+        <p id="login-error" class="form-info"></p>
+        <button type="submit" class="btn btn-primary">Entrar</button>
+        <button type="button" id="show-reset" class="btn btn-ghost">Esqueci minha senha</button>
+        <button type="button" id="show-register" class="btn btn-ghost">Criar conta</button>
+      </form>
 
-<script>
-const boot = document.getElementById("boot-screen");
-const loginScreen = document.getElementById("login-screen");
-const transition = document.getElementById("transition-screen");
-const app = document.getElementById("app-screen");
+      <form id="register-form" class="form hidden">
+        <h2>Criar conta</h2>
+        <label for="register-name">Nome completo</label>
+        <input id="register-name" type="text" required />
+        <label for="register-cpf">CPF</label>
+        <input id="register-cpf" type="text" required />
+        <label for="register-dob">Data de nascimento</label>
+        <input id="register-dob" type="date" required />
+        <label for="register-crmv">CRMV</label>
+        <input id="register-crmv" type="text" required />
+        <label for="register-email">E-mail</label>
+        <input id="register-email" type="email" required />
+        <label for="register-password">Senha</label>
+        <input id="register-password" type="password" required />
+        <label for="register-password-confirm">Confirmar senha</label>
+        <input id="register-password-confirm" type="password" required />
+        <p id="register-error" class="form-info"></p>
+        <button type="submit" class="btn btn-primary">Cadastrar</button>
+        <button type="button" id="show-login-from-register" class="btn btn-ghost">Voltar para login</button>
+      </form>
 
-function show(screen){
-  [boot, loginScreen, transition, app].forEach(s=>{
-    s.classList.remove("active");
-  });
-  screen.classList.add("active");
-}
+      <form id="reset-form" class="form hidden">
+        <h2>Recuperar senha</h2>
+        <label for="reset-email">E-mail cadastrado</label>
+        <input id="reset-email" type="email" required />
+        <p id="reset-info" class="form-info"></p>
+        <button type="submit" class="btn btn-primary">Enviar link</button>
+        <button type="button" id="show-login-from-reset" class="btn btn-ghost">Voltar para login</button>
+      </form>
+    </div>
+  </section>
 
-function init(){
-  show(boot);
+  <section id="home-view" class="view">
+    <div class="home-shell">
+      <header class="app-header">
+        <p class="app-subtitle">Olá, <span id="user-name">Parceiro</span></p>
+        <button id="logout-btn" class="btn btn-ghost btn-sm" type="button">Sair</button>
+      </header>
 
-  setTimeout(()=>{
-    const user = localStorage.getItem("user");
+      <section class="home-card">
+        <h2>Seu cartão Biovet Milhas</h2>
+        <p class="home-text">Confira seus dados e saldo atualizado.</p>
 
-    if(user){
-      goToApp();
-    } else {
-      show(loginScreen);
-    }
+        <article class="milhas-card">
+          <div class="milhas-card-inner">
+            <div class="milhas-card-top">
+              <span class="milhas-program-label">PROGRAMA BIOVET MILHAS</span>
+            </div>
 
-  }, 800);
-}
+            <div class="milhas-card-middle">
+              <p class="milhas-points-label">Pontuação</p>
+              <p id="points-value" class="milhas-points-value">0 pontos</p>
+            </div>
 
-function login(){
-  localStorage.setItem("user","ok");
-  goToApp();
-}
+            <div class="milhas-card-bottom">
+              <div class="milhas-card-field">
+                <span class="milhas-field-label">Nome</span>
+                <strong id="card-user-name" class="milhas-field-value">---</strong>
+              </div>
+              <div class="milhas-card-field">
+                <span class="milhas-field-label">CRMV</span>
+                <strong id="card-user-crmv" class="milhas-field-value">---</strong>
+              </div>
+            </div>
+          </div>
+        </article>
 
-async function goToApp(){
-  show(transition);
+        <a id="whatsapp-link" class="btn btn-whatsapp" href="#" target="_blank" rel="noopener noreferrer">
+          Trocar pontos no WhatsApp
+        </a>
+      </section>
+    </div>
+  </section>
 
-  await new Promise(r => setTimeout(r, 1200));
-
-  document.getElementById("pontos").innerText = "1200";
-
-  show(app);
-}
-
-init();
-</script>
-
-</body>
-</html>
+  <script type="module" src="app.js"></script>
+  <script>
+    const transitionScreen = document.getElementById('transition-screen');
+    window.addEventListener('load', () => {
+      setTimeout(() => transitionScreen.classList.remove('active'), 900);
+    });
+    window.showLoadingOverlay = () => transitionScreen.classList.add('active');
+    window.hideLoadingOverlay = () => transitionScreen.classList.remove('active');
+  </script>
+  
+  </body>
+  </html>
