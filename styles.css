@@ -51,8 +51,12 @@ input{
 
 /* BOOT */
 .logo{
-  width:90px;
+  width:117px;
   animation:float 2s infinite;
+}
+
+#boot-screen{
+  background:linear-gradient(180deg,#1f7f85 0%, #2aa7b3 55%, #7ed2df 100%);
 }
 
 /* TRANSIÇÃO */
