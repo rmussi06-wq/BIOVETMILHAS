@@ -87,11 +87,13 @@ const cardUserCrmvEl = document.getElementById('card-user-crmv');
 // =========================================
 
 function showAuthView() {
+  if (window.hideLoadingOverlay) window.hideLoadingOverlay();
   authView.classList.add('active');
   homeView.classList.remove('active');
 }
 
 function showHomeView() {
+  if (window.hideLoadingOverlay) window.hideLoadingOverlay();
   homeView.classList.add('active');
   authView.classList.remove('active');
 }
@@ -260,6 +262,7 @@ onAuthStateChanged(auth, async (user) => {
   if (isRegistering) return;
 
   if (user) {
+    if (window.showLoadingOverlay) window.showLoadingOverlay();
     try {
       const userDocRef = doc(db, 'users', user.uid);
       const userDocSnap = await getDoc(userDocRef);
@@ -275,8 +278,8 @@ onAuthStateChanged(auth, async (user) => {
       const data = userDocSnap.data();
 
       if (data.approved === true) {
-        showHomeView();
         await carregarDadosHome(user);
+        showHomeView();
       } else {
         await signOut(auth);
         showAuthView();

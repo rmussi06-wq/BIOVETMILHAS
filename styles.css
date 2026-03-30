@@ -1,230 +1,391 @@
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#0f172a;
-  color:#fff;
+:root {
+  --color-primary: #1a7175;
+  --color-primary-dark: #15585b;
+  --color-primary-deep: #13575b;
+  --color-accent: #22c55e;
+  --color-accent-dark: #16a34a;
+  --color-bg: #f5f7f9;
+  --color-surface: rgba(255, 255, 255, 0.96);
+  --color-surface-strong: #ffffff;
+  --color-text: #22313f;
+  --color-text-soft: #4f6272;
+  --color-muted: #7a8b9a;
+  --color-border: rgba(255, 255, 255, 0.18);
+  --color-danger: #c0392b;
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.10);
+  --shadow-card: 0 28px 60px rgba(8, 34, 36, 0.22);
+  --shadow-button: 0 14px 28px rgba(22, 163, 74, 0.28);
+  --transition-fast: 180ms ease;
 }
 
-/* TELAS */
-.screen{
-  display:none;
-  height:100vh;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
+* {
+  box-sizing: border-box;
 }
 
-.screen.active{
-  display:flex;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: var(--color-text);
+  background: linear-gradient(180deg, #1f7f85 0%, #2aa7b3 55%, #7ed2df 100%);
+  min-height: 100vh;
 }
 
-/* CARD */
-.card{
-  background:#fff;
-  color:#000;
-  padding:30px;
-  border-radius:20px;
-  text-align:center;
-  width:80%;
-  max-width:350px;
-}
-
-/* BOTÃO */
-button{
-  background:#22c55e;
-  border:none;
-  padding:15px;
-  border-radius:12px;
-  color:#fff;
-  font-size:16px;
-  margin-top:15px;
-}
-
-/* INPUT */
-input{
-  width:100%;
-  padding:12px;
-  margin:10px 0;
-  border-radius:10px;
-  border:1px solid #ccc;
-}
-
-/* BOOT */
-.logo{
-  width:90px;
-  animation:float 2s infinite;
-}
-
-/* TRANSIÇÃO */
-#transition-screen{
-  background:linear-gradient(180deg,#39b7a5,#126b70);
-}
-
-.transition-card{
-  text-align:center;
-  position:relative;
-}
-
-.transition-glow{
-  position:absolute;
-  width:150px;
-  height:150px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,0.4),transparent);
-  top:-20px;
-  left:50%;
-  transform:translateX(-50%);
-  animation:pulse 2s infinite;
-}
-
-.transition-logo{
-  width:100px;
-  animation:float 2s infinite;
-}
-
-.transition-title{
-  margin-top:20px;
-  font-size:24px;
-  font-weight:bold;
-}
-
-.transition-subtitle{
-  opacity:0.8;
-}
-
-/* LOADER */
-.magic-loader{
-  display:flex;
-  justify-content:center;
-  margin-top:20px;
-  gap:10px;
-}
-
-.magic-loader span{
-  width:10px;
-  height:10px;
-  background:white;
-  border-radius:50%;
-  animation:bounce 1s infinite;
-}
-
-.magic-loader span:nth-child(2){
-  animation-delay:0.2s;
-}
-.magic-loader span:nth-child(3){
-  animation-delay:0.4s;
-}
-
-/* ANIMAÇÕES */
-@keyframes float{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-8px);}
-}
-
-@keyframes pulse{
-  0%,100%{opacity:0.7; transform:scale(1);}
-  50%{opacity:1; transform:scale(1.1);}
-}
-
-@keyframes bounce{
-  0%,80%,100%{transform:translateY(0);}
-  40%{transform:translateY(-10px);}
-}
-
-/* ===== OVERLAY DE ABERTURA / TRANSIÇÃO ===== */
-.bm-overlay {
+.screen {
   position: fixed;
   inset: 0;
-  z-index: 99999;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 22%, transparent 42%),
-    linear-gradient(180deg, #1f7f85 0%, #2aa7b3 55%, #7ed2df 100%);
-  opacity: 1;
-  visibility: visible;
-  transition: opacity .35s ease, visibility .35s ease;
+  z-index: 30;
 }
 
-.bm-overlay.is-hidden {
-  opacity: 0;
-  visibility: hidden;
+.screen.active {
+  display: flex;
+}
+
+.transition-screen {
+  background: linear-gradient(180deg, #1f7f85 0%, #2aa7b3 55%, #7ed2df 100%);
+}
+
+.transition-card {
+  text-align: center;
+  color: #ffffff;
+}
+
+.transition-logo {
+  width: 108px;
+  animation: float 2s ease-in-out infinite;
+}
+
+.transition-title {
+  margin: 20px 0 4px;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.transition-subtitle {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.magic-loader {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.magic-loader span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: bounce 1s infinite;
+}
+
+.magic-loader span:nth-child(2) { animation-delay: .2s; }
+.magic-loader span:nth-child(3) { animation-delay: .4s; }
+
+.view {
+  min-height: 100vh;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 14px;
+}
+
+.view.active {
+  display: flex;
+}
+
+.panel,
+.home-shell {
+  width: min(100%, 460px);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  padding: 22px 20px;
+}
+
+.brand-logo {
+  width: 118px;
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form.hidden {
+  display: none;
+}
+
+.form h2 {
+  margin: 0 0 2px;
+  font-size: 1.02rem;
+  color: var(--color-primary-dark);
+}
+
+label {
+  font-size: .8rem;
+  color: var(--color-text-soft);
+}
+
+input {
+  border: 1px solid #dbe2e8;
+  border-radius: 14px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: .95rem;
+}
+
+input:focus {
+  outline: 2px solid rgba(26, 113, 117, .25);
+  border-color: #9fcfd2;
+}
+
+.form-info {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: .82rem;
+  color: var(--color-danger);
+}
+
+.btn {
+  border: 0;
+  border-radius: var(--radius-pill);
+  min-height: 46px;
+  padding: 0 18px;
+  font-weight: 700;
+  font-size: .95rem;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast), background-color var(--transition-fast);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-primary-deep);
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 0 14px;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.app-subtitle {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-weight: 600;
+}
+
+.home-card {
+  margin-top: 6px;
+}
+
+.home-card h2 {
+  margin: 0 0 8px;
+  font-size: 2.1rem;
+  line-height: 1.02;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: #ffffff;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.home-text {
+  margin: 0 0 20px;
+  font-size: 0.96rem;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.5;
+}
+
+.milhas-card {
+  position: relative;
+  margin: 24px auto 28px;
+  width: 100%;
+  max-width: 440px;
+  min-height: 280px;
+  border-radius: 30px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(60, 179, 192, 0.18), transparent 24%),
+    linear-gradient(145deg, #ffffff 0%, #f4fbfc 45%, #edf7f8 100%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 30px 70px rgba(8, 34, 36, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.milhas-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.40) 35%, transparent 70%);
   pointer-events: none;
 }
 
-.bm-loader-wrap {
+.milhas-card-inner {
   position: relative;
-  width: 220px;
-  height: 220px;
+  z-index: 1;
+  min-height: 280px;
+  height: 100%;
+  padding: 24px 24px 22px;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+}
+
+.milhas-card-top {
+  display: flex;
   align-items: center;
-  justify-content: center;
 }
 
-.bm-glow {
-  position: absolute;
-  width: 150px;
-  height: 150px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(255,255,255,.38) 0%, rgba(255,255,255,.10) 38%, rgba(255,255,255,0) 72%);
-  filter: blur(8px);
-  animation: bmPulse 1.8s ease-in-out infinite;
+.milhas-card-middle {
+  margin-top: 10px;
 }
 
-.bm-loader-logo {
-  width: 82px;
-  height: 82px;
-  object-fit: contain;
-  border-radius: 999px;
-  background: rgba(255,255,255,.18);
-  padding: 8px;
-  position: relative;
-  z-index: 2;
-  animation: bmFloat 2.1s ease-in-out infinite;
-  box-shadow: 0 10px 30px rgba(0,0,0,.16);
+.milhas-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 14px;
+  margin-top: 18px;
 }
 
-.bm-ring {
-  position: absolute;
-  width: 118px;
-  height: 118px;
-  border-radius: 999px;
-  border: 4px solid rgba(255,255,255,.14);
-  border-top-color: rgba(255,255,255,.95);
-  border-right-color: rgba(255,255,255,.5);
-  animation: bmSpin 1.05s linear infinite;
+.milhas-card-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.bm-loader-text {
-  margin-top: 24px;
-  font-size: 20px;
+.milhas-program-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  background: rgba(26, 113, 117, 0.10);
+  color: var(--color-primary-dark);
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
   font-weight: 800;
+}
+
+.milhas-points-label {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.milhas-points-value {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+  color: var(--color-primary-deep);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.milhas-field-label {
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.milhas-field-value {
+  margin-top: 4px;
+  font-size: 0.96rem;
+  color: #163243;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-whatsapp {
+  width: 100%;
+  min-height: 56px;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
   color: #ffffff;
-  letter-spacing: -.02em;
-  text-align: center;
-  text-shadow: 0 2px 10px rgba(0,0,0,.10);
+  box-shadow: var(--shadow-button);
+  margin-top: 2px;
 }
 
-.bm-loader-subtext {
-  margin-top: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255,255,255,.88);
-  text-align: center;
+.btn-whatsapp:hover {
+  box-shadow: 0 18px 34px rgba(22, 163, 74, 0.34);
 }
 
-@keyframes bmSpin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes bmFloat {
+@keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-8px); }
 }
 
-@keyframes bmPulse {
-  0%, 100% { transform: scale(1); opacity: .85; }
-  50% { transform: scale(1.08); opacity: 1; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+}
+
+@media (max-width: 520px) {
+  .panel,
+  .home-shell {
+    padding: 18px 14px;
+  }
+
+  .home-card h2 {
+    font-size: 1.75rem;
+  }
+
+  .milhas-card {
+    min-height: 250px;
+  }
+
+  .milhas-card-inner {
+    min-height: 245px;
+    padding: 20px 18px 18px;
+  }
+
+  .milhas-points-value {
+    font-size: 2.35rem;
+  }
+
+  .milhas-field-value {
+    font-size: 0.86rem;
+  }
+
+  .btn {
+    padding: 11px 14px;
+  }
 }
