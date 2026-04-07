@@ -243,75 +243,24 @@
   <script type="module" src="app.js"></script>
 
   <script>
-    // ── Splash → Welcome transition ──────────────────────
+    // ── Splash: some após 1.8s ───────────────────────────
     const splash = document.getElementById('splash');
-    const authView = document.getElementById('auth-view');
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const formsPanel = document.getElementById('forms-panel');
-    const backToWelcome = document.getElementById('back-to-welcome');
 
     window.addEventListener('load', () => {
       setTimeout(() => {
         splash.classList.add('splash--out');
-        setTimeout(() => {
-          splash.style.display = 'none';
-        }, 600);
+        setTimeout(() => { splash.style.display = 'none'; }, 600);
       }, 1800);
     });
 
-    // ── Welcome → Forms navigation ───────────────────────
-    document.getElementById('btn-go-login').addEventListener('click', () => {
-      welcomeScreen.classList.add('panel--slide-out');
-      formsPanel.classList.remove('hidden');
-      formsPanel.classList.add('panel--slide-in');
-      // show login form
-      document.getElementById('login-form').classList.remove('hidden');
-      document.getElementById('register-form').classList.add('hidden');
-      document.getElementById('reset-form').classList.add('hidden');
-    });
-
-    document.getElementById('btn-go-register').addEventListener('click', () => {
-      welcomeScreen.classList.add('panel--slide-out');
-      formsPanel.classList.remove('hidden');
-      formsPanel.classList.add('panel--slide-in');
-      document.getElementById('login-form').classList.add('hidden');
-      document.getElementById('register-form').classList.remove('hidden');
-      document.getElementById('reset-form').classList.add('hidden');
-    });
-
-    backToWelcome.addEventListener('click', () => {
-      formsPanel.classList.remove('panel--slide-in');
-      formsPanel.classList.add('panel--slide-out');
-      setTimeout(() => {
-        formsPanel.classList.add('hidden');
-        formsPanel.classList.remove('panel--slide-out');
-        welcomeScreen.classList.remove('panel--slide-out');
-      }, 320);
-    });
-
-    // ── Toggle mostrar/ocultar senha ────────────────────
-    document.querySelectorAll('.btn-eye').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const input = document.getElementById(btn.dataset.target);
-        input.type = input.type === 'password' ? 'text' : 'password';
-        btn.classList.toggle('active');
-      });
-    });
-
-    // ── Loading overlay helpers ──────────────────────────
+    // ── Loading overlay (usado pelo app.js) ─────────────
     window.showLoadingOverlay = () => {
-      if (!splash.classList.contains('splash--loading')) {
-        splash.style.display = 'flex';
-        splash.classList.add('splash--loading');
-        splash.classList.remove('splash--out');
-      }
+      splash.style.display = 'flex';
+      splash.classList.remove('splash--out');
     };
     window.hideLoadingOverlay = () => {
       splash.classList.add('splash--out');
-      setTimeout(() => {
-        splash.style.display = 'none';
-        splash.classList.remove('splash--loading', 'splash--out');
-      }, 500);
+      setTimeout(() => { splash.style.display = 'none'; }, 500);
     };
   </script>
 
