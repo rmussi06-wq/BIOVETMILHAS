@@ -1,4 +1,3 @@
-// Importes do Firebase (SDK modular via CDN)
 import { initializeApp } from ‘https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js’;
 import {
 getAuth,
@@ -16,10 +15,7 @@ setDoc,
 getDoc
 } from ‘https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js’;
 
-// =========================================
-// CONFIGURAÇÕES
-// =========================================
-
+// ── CONFIG ───────────────────────────────────────
 const firebaseConfig = {
 apiKey: “AIzaSyCW2HG6ECzk6OD0cenYqY1R3rsJ1Oecgek”,
 authDomain: “biovet-parceiro-vet.firebaseapp.com”,
@@ -28,23 +24,16 @@ storageBucket: “biovet-parceiro-vet.firebasestorage.app”,
 messagingSenderId: “549792200166”,
 appId: “1:549792200166:web:0cf14a3895227b79031227”
 };
-
 const APPS_SCRIPT_URL = ‘’;
 
-// =========================================
-// INICIALIZAÇÃO FIREBASE
-// =========================================
-
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+// ── FIREBASE ─────────────────────────────────────
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
 
 let isRegistering = false;
 
-// =========================================
-// ELEMENTOS
-// =========================================
-
+// ── ELEMENTOS ────────────────────────────────────
 const authView      = document.getElementById(‘auth-view’);
 const homeView      = document.getElementById(‘home-view’);
 const welcomeScreen = document.getElementById(‘welcome-screen’);
@@ -76,20 +65,21 @@ const whatsappLink   = document.getElementById(‘whatsapp-link’);
 const cardUserNameEl = document.getElementById(‘card-user-name’);
 const cardUserCrmvEl = document.getElementById(‘card-user-crmv’);
 
-// =========================================
-// NAVEGAÇÃO ENTRE PAINÉIS
-// =========================================
+// ── NAVEGAÇÃO ────────────────────────────────────
 
 function abrirForms(formId) {
 welcomeScreen.style.display = ‘none’;
 formsPanel.classList.remove(‘hidden’);
 mostrarForm(formId);
+// Volta para o topo ao abrir
+window.scrollTo(0, 0);
 }
 
 function voltarParaWelcome() {
 formsPanel.classList.add(‘hidden’);
 welcomeScreen.style.display = ‘’;
-loginError.textContent = ‘’;
+limparMensagem(loginError);
+window.scrollTo(0, 0);
 }
 
 function mostrarForm(id) {
@@ -97,25 +87,36 @@ function mostrarForm(id) {
 if (f) f.classList.add(‘hidden’);
 });
 const alvo = document.getElementById(id);
-if (alvo) alvo.classList.remove(‘hidden’);
+if (alvo) {
+alvo.classList.remove(‘hidden’);
+window.scrollTo(0, 0);
+}
 }
 
-// Botões da welcome screen
-document.getElementById(‘btn-go-login’)?.addEventListener(‘click’, () => abrirForms(‘login-form’));
-document.getElementById(‘btn-go-register’)?.addEventListener(‘click’, () => abrirForms(‘register-form’));
+// ── LISTENERS DE NAVEGAÇÃO ───────────────────────
 
-// Botão voltar
-document.getElementById(‘back-to-welcome’)?.addEventListener(‘click’, voltarParaWelcome);
+document.getElementById(‘btn-go-login’)
+?.addEventListener(‘click’, () => abrirForms(‘login-form’));
 
-// Troca entre forms
-document.getElementById(‘show-reset’)?.addEventListener(‘click’, () => mostrarForm(‘reset-form’));
-document.getElementById(‘show-register’)?.addEventListener(‘click’, () => mostrarForm(‘register-form’));
-document.getElementById(‘show-login-from-register’)?.addEventListener(‘click’, () => mostrarForm(‘login-form’));
-document.getElementById(‘show-login-from-reset’)?.addEventListener(‘click’, () => mostrarForm(‘login-form’));
+document.getElementById(‘btn-go-register’)
+?.addEventListener(‘click’, () => abrirForms(‘register-form’));
 
-// =========================================
-// TROCA DE VIEWS (AUTH / HOME)
-// =========================================
+document.getElementById(‘back-to-welcome’)
+?.addEventListener(‘click’, voltarParaWelcome);
+
+document.getElementById(‘show-reset’)
+?.addEventListener(‘click’, () => mostrarForm(‘reset-form’));
+
+document.getElementById(‘show-register’)
+?.addEventListener(‘click’, () => mostrarForm(‘register-form’));
+
+document.getElementById(‘show-login-from-register’)
+?.addEventListener(‘click’, () => mostrarForm(‘login-form’));
+
+document.getElementById(‘show-login-from-reset’)
+?.addEventListener(‘click’, () => mostrarForm(‘login-form’));
+
+// ── VIEWS ────────────────────────────────────────
 
 function mostrarAuthView(opcoes = {}) {
 if (window.hideLoadingOverlay) window.hideLoadingOverlay();
@@ -123,35 +124,35 @@ if (window.hideLoadingOverlay) window.hideLoadingOverlay();
 homeView.classList.remove(‘active’);
 authView.classList.add(‘active’);
 
-// Sempre volta para welcome ao chamar sem opções
+// Sempre volta para welcome
 formsPanel.classList.add(‘hidden’);
 welcomeScreen.style.display = ‘’;
 
+// Limpa campos e mensagens
 loginEmailInput.value    = ‘’;
 loginPasswordInput.value = ‘’;
-loginError.textContent   = ‘’;
+limparMensagem(loginError);
 
+// Se vier com opções, abre direto no form com mensagem
 if (opcoes.form) {
 abrirForms(opcoes.form);
-if (opcoes.mensagem && opcoes.alvo) {
-const el = document.getElementById(opcoes.alvo);
-if (el) {
-el.textContent = opcoes.mensagem;
-el.className   = opcoes.classe || ‘form-msg’;
+if (opcoes.elId && opcoes.mensagem) {
+const el = document.getElementById(opcoes.elId);
+if (el) mostrarMensagem(el, opcoes.mensagem, opcoes.tipo || ‘error’);
 }
 }
-}
+
+window.scrollTo(0, 0);
 }
 
 function mostrarHomeView() {
 if (window.hideLoadingOverlay) window.hideLoadingOverlay();
 authView.classList.remove(‘active’);
 homeView.classList.add(‘active’);
+window.scrollTo(0, 0);
 }
 
-// =========================================
-// OBSERVADOR DE AUTENTICAÇÃO
-// =========================================
+// ── OBSERVADOR DE AUTENTICAÇÃO ───────────────────
 
 onAuthStateChanged(auth, async (user) => {
 if (isRegistering) return;
@@ -167,9 +168,9 @@ try {
     await signOut(auth);
     mostrarAuthView({
       form: 'login-form',
-      alvo: 'login-error',
-      mensagem: 'Cadastro não encontrado.',
-      classe: 'form-msg form-msg--error'
+      elId: 'login-error',
+      mensagem: 'Cadastro nao encontrado.',
+      tipo: 'error'
     });
     return;
   }
@@ -183,9 +184,9 @@ try {
     await signOut(auth);
     mostrarAuthView({
       form: 'login-form',
-      alvo: 'login-error',
-      mensagem: 'Seu cadastro ainda não foi aprovado. Aguarde o contato da equipe Biovetfarma.',
-      classe: 'form-msg form-msg--error'
+      elId: 'login-error',
+      mensagem: 'Cadastro ainda nao aprovado. Aguarde o contato da equipe Biovetfarma.',
+      tipo: 'error'
     });
   }
 } catch (err) {
@@ -193,9 +194,9 @@ try {
   await signOut(auth);
   mostrarAuthView({
     form: 'login-form',
-    alvo: 'login-error',
+    elId: 'login-error',
     mensagem: 'Erro ao validar cadastro. Tente novamente.',
-    classe: 'form-msg form-msg--error'
+    tipo: 'error'
   });
 }
 ```
@@ -205,19 +206,17 @@ mostrarAuthView();
 }
 });
 
-// =========================================
-// LOGIN
-// =========================================
+// ── LOGIN ────────────────────────────────────────
 
 loginForm?.addEventListener(‘submit’, async (e) => {
 e.preventDefault();
-loginError.textContent = ‘’;
+limparMensagem(loginError);
 
 const email    = loginEmailInput.value.trim();
 const password = loginPasswordInput.value;
 
 if (!email || !password) {
-exibirErro(loginError, ‘Informe e-mail e senha.’);
+mostrarMensagem(loginError, ‘Informe e-mail e senha.’, ‘error’);
 return;
 }
 
@@ -229,18 +228,16 @@ await signInWithEmailAndPassword(auth, email, password);
 // onAuthStateChanged cuida do redirecionamento
 } catch (err) {
 console.error(err);
-exibirErro(loginError, traduzErro(err.code));
+mostrarMensagem(loginError, traduzErro(err.code), ‘error’);
 pararLoading(btn);
 }
 });
 
-// =========================================
-// CADASTRO
-// =========================================
+// ── CADASTRO ─────────────────────────────────────
 
 registerForm?.addEventListener(‘submit’, async (e) => {
 e.preventDefault();
-registerError.textContent = ‘’;
+limparMensagem(registerError);
 
 const nome           = registerNameInput.value.trim();
 const cpf            = registerCpfInput.value.trim();
@@ -251,12 +248,12 @@ const senha          = registerPasswordInput.value;
 const senhaConf      = registerPasswordConfirmInput.value;
 
 if (!nome || !cpf || !dataNascimento || !crmv || !email || !senha || !senhaConf) {
-exibirErro(registerError, ‘Preencha todos os campos.’);
+mostrarMensagem(registerError, ‘Preencha todos os campos.’, ‘error’);
 return;
 }
 
 if (senha !== senhaConf) {
-exibirErro(registerError, ‘As senhas não conferem.’);
+mostrarMensagem(registerError, ‘As senhas nao conferem.’, ‘error’);
 return;
 }
 
@@ -287,32 +284,30 @@ registerForm.reset();
 
 mostrarAuthView({
   form: 'login-form',
-  alvo: 'login-error',
-  mensagem: '✅ Cadastro realizado! Aguarde aprovação para acessar.',
-  classe: 'form-msg form-msg--success'
+  elId: 'login-error',
+  mensagem: 'Cadastro realizado! Aguarde aprovacao para acessar.',
+  tipo: 'success'
 });
 ```
 
 } catch (err) {
-console.error(‘Erro no cadastro:’, err);
-exibirErro(registerError, traduzErro(err.code));
+console.error(err);
+mostrarMensagem(registerError, traduzErro(err.code), ‘error’);
 } finally {
 isRegistering = false;
 pararLoading(btn);
 }
 });
 
-// =========================================
-// RESET DE SENHA
-// =========================================
+// ── RESET DE SENHA ───────────────────────────────
 
 resetForm?.addEventListener(‘submit’, async (e) => {
 e.preventDefault();
-resetInfo.textContent = ‘’;
+limparMensagem(resetInfo);
 
 const email = resetEmailInput.value.trim();
 if (!email) {
-exibirErro(resetInfo, ‘Informe o e-mail cadastrado.’);
+mostrarMensagem(resetInfo, ‘Informe o e-mail cadastrado.’, ‘error’);
 return;
 }
 
@@ -321,27 +316,20 @@ iniciarLoading(btn);
 
 try {
 await sendPasswordResetEmail(auth, email);
-resetInfo.textContent = ‘✅ Link enviado! Verifique seu e-mail.’;
-resetInfo.className   = ‘form-msg form-msg–success’;
+mostrarMensagem(resetInfo, ‘Link enviado! Verifique seu e-mail.’, ‘success’);
 } catch (err) {
 console.error(err);
-exibirErro(resetInfo, traduzErro(err.code));
+mostrarMensagem(resetInfo, traduzErro(err.code), ‘error’);
 } finally {
 pararLoading(btn);
 }
 });
 
-// =========================================
-// LOGOUT
-// =========================================
+// ── LOGOUT ───────────────────────────────────────
 
-logoutBtn?.addEventListener(‘click’, async () => {
-await signOut(auth);
-});
+logoutBtn?.addEventListener(‘click’, () => signOut(auth));
 
-// =========================================
-// CARREGAR DADOS DA HOME
-// =========================================
+// ── DADOS DA HOME ────────────────────────────────
 
 async function carregarDadosHome(user, data) {
 const nome   = data?.nome   || user.displayName || user.email?.split(’@’)[0] || ‘Parceiro’;
@@ -354,42 +342,41 @@ if (cardUserCrmvEl) cardUserCrmvEl.textContent = crmv;
 
 animarContador(pointsValueEl, 0, pontos, 1200);
 
-const msg = encodeURIComponent(`Olá, sou o(a) Dr(a). ${nome} e gostaria de trocar minhas Biovet Milhas.`);
+const msg = encodeURIComponent(`Ola, sou o(a) Dr(a). ${nome} e gostaria de trocar minhas Biovet Milhas.`);
 if (whatsappLink) whatsappLink.href = `https://wa.me/5514997132879?text=${msg}`;
 }
 
-// =========================================
-// CONTADOR ANIMADO DE PONTOS
-// =========================================
+// ── CONTADOR ANIMADO ─────────────────────────────
 
 function animarContador(el, de, para, duracao) {
 if (!el) return;
 if (para === 0) { el.textContent = ‘0’; return; }
-
 const inicio = performance.now();
 const diff   = para - de;
-
 function passo(agora) {
 const p = Math.min((agora - inicio) / duracao, 1);
 const s = 1 - Math.pow(1 - p, 3);
 el.textContent = Math.round(de + diff * s).toLocaleString(‘pt-BR’);
 if (p < 1) requestAnimationFrame(passo);
 }
-
 requestAnimationFrame(passo);
 }
 
-// =========================================
-// UTILITÁRIOS DE UI
-// =========================================
+// ── UTILITÁRIOS DE UI ────────────────────────────
 
-function exibirErro(el, msg) {
+function mostrarMensagem(el, msg, tipo) {
 if (!el) return;
-el.textContent     = msg;
-el.className       = ‘form-msg form-msg–error’;
+el.textContent = msg;
+el.className   = ’form-msg visible ’ + tipo;
 el.style.animation = ‘none’;
 void el.offsetHeight;
-el.style.animation = ‘shake 0.35s ease’;
+if (tipo === ‘error’) el.style.animation = ‘shake 0.35s ease’;
+}
+
+function limparMensagem(el) {
+if (!el) return;
+el.textContent = ‘’;
+el.className   = ‘form-msg’;
 }
 
 function iniciarLoading(btn) {
@@ -407,7 +394,8 @@ btn.textContent   = btn.dataset.original || btn.textContent;
 btn.style.opacity = ‘1’;
 }
 
-// Toggle senha
+// ── TOGGLE SENHA ─────────────────────────────────
+
 document.querySelectorAll(’.btn-eye’).forEach(btn => {
 btn.addEventListener(‘click’, () => {
 const input = document.getElementById(btn.dataset.target);
@@ -417,22 +405,15 @@ btn.classList.toggle(‘active’);
 });
 });
 
-// CSS da animação shake e success
-const style = document.createElement(‘style’);
-style.textContent = `@keyframes shake { 0%,100% { transform: translateX(0); } 20%      { transform: translateX(-6px); } 40%      { transform: translateX(6px); } 60%      { transform: translateX(-4px); } 80%      { transform: translateX(4px); } } .form-msg--success { background: #e6f9ee !important; color: #1a7d3a !important; padding: 10px 14px; border-radius: 10px; }`;
-document.head.appendChild(style);
-
-// =========================================
-// TRADUÇÃO DE ERROS FIREBASE
-// =========================================
+// ── ERROS FIREBASE ───────────────────────────────
 
 function traduzErro(code) {
 const mapa = {
-‘auth/invalid-email’:        ‘E-mail inválido.’,
-‘auth/user-disabled’:        ‘Usuário desativado.’,
-‘auth/user-not-found’:       ‘E-mail não cadastrado.’,
+‘auth/invalid-email’:        ‘E-mail invalido.’,
+‘auth/user-disabled’:        ‘Usuario desativado.’,
+‘auth/user-not-found’:       ‘E-mail nao cadastrado.’,
 ‘auth/wrong-password’:       ‘Senha incorreta.’,
-‘auth/email-already-in-use’: ‘E-mail já cadastrado.’,
+‘auth/email-already-in-use’: ‘E-mail ja cadastrado.’,
 ‘auth/weak-password’:        ‘Senha fraca. Use pelo menos 6 caracteres.’,
 ‘auth/invalid-credential’:   ‘E-mail ou senha incorretos.’,
 ‘auth/too-many-requests’:    ‘Muitas tentativas. Aguarde alguns minutos.’,
@@ -440,14 +421,12 @@ const mapa = {
 return mapa[code] || ‘Ocorreu um erro. Tente novamente.’;
 }
 
-// =========================================
-// SERVICE WORKER
-// =========================================
+// ── SERVICE WORKER ───────────────────────────────
 
 if (‘serviceWorker’ in navigator) {
 window.addEventListener(‘load’, () => {
 navigator.serviceWorker
 .register(‘service-worker.js’)
-.catch(err => console.error(‘Service Worker:’, err));
+.catch(err => console.error(‘SW:’, err));
 });
 }
