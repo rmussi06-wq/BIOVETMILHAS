@@ -1,79 +1,52 @@
 /* ═══════════════════════════════════════════════════
    BIOVET MILHAS — Design System v2
-   Visual gamificado inspirado no Duolingo
-   Paleta oficial Biovetfarma
    ═══════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900;1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
-/* ── TOKENS ─────────────────────────────────────── */
 :root {
-  /* Paleta Biovetfarma */
   --teal:         #3CB3C0;
   --teal-dark:    #1A7175;
   --teal-deep:    #145a5e;
   --teal-shadow:  #0f4548;
-  --green-light:  #CFF9B9;
-  --green-mid:    #9FD983;
-  --green-vivid:  #84C165;
-  --green-shadow: #5a8f40;
-  --cream:        #FEFED3;
-  --olive:        #D6D37F;
-
-  /* Superfícies */
   --bg:           #f0fafb;
   --surface:      #FFFFFF;
-
-  /* Texto */
   --text:         #1A3A3D;
   --text-soft:    #4d7c80;
   --text-muted:   #8ab5b8;
-
-  /* Feedback */
   --danger:       #FF4B4B;
   --danger-bg:    #FFF0F0;
-  --success:      #58CC02;
-  --success-dark: #45a800;
-
-  /* Formas */
+  --success-dark: #1a7d3a;
+  --success-bg:   #e6f9ee;
   --r-sm:   10px;
   --r-md:   16px;
-  --r-lg:   24px;
-  --r-xl:   32px;
   --r-pill: 999px;
-
-  /* Família tipográfica */
   --font: 'Nunito', sans-serif;
 }
 
-/* ── RESET & BASE ───────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { -webkit-tap-highlight-color: transparent; }
 
 body {
   font-family: var(--font);
   color: var(--text);
   background: var(--bg);
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow-x: hidden;
+  /* Não colocar overflow:hidden no body — precisa de scroll nos forms */
 }
 
-/* ════════════════════════════════════════════════════
-   SPLASH SCREEN
-   ════════════════════════════════════════════════════ */
+/* ════════════════════════════════
+   SPLASH
+   ════════════════════════════════ */
 .splash {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 200;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
   background: var(--teal);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition: opacity 0.6s ease;
 }
 
 .splash--out {
@@ -82,7 +55,7 @@ body {
 }
 
 .splash-logo-wrap {
-  animation: splashBounce 0.7s var(--ease-bounce, cubic-bezier(0.34,1.56,0.64,1)) 0.2s both;
+  animation: splashBounce 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
 }
 
 @keyframes splashBounce {
@@ -91,8 +64,8 @@ body {
 }
 
 .splash-logo {
-  width: 130px;
-  height: 130px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
   filter: drop-shadow(0 12px 28px rgba(0,0,0,0.22));
 }
@@ -104,11 +77,6 @@ body {
   font-weight: 900;
   letter-spacing: -0.02em;
   animation: fadeUp 0.5s ease 0.7s both;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 .splash-dots {
@@ -132,61 +100,39 @@ body {
   40%            { transform: scale(1.5); opacity: 1; }
 }
 
-/* ════════════════════════════════════════════════════
+/* ════════════════════════════════
    VIEWS
-   ════════════════════════════════════════════════════ */
+   ════════════════════════════════ */
 .view {
   display: none;
+}
+.view.active {
+  display: block;
   min-height: 100vh;
   min-height: 100dvh;
 }
-.view.active { display: flex; }
 
-/* ── AUTH VIEW ────────────────────────────────────── */
+/* ════════════════════════════════
+   AUTH VIEW
+   ════════════════════════════════ */
 #auth-view {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   background: var(--surface);
-}
-
-/* ── AUTH PANELS ────────────────────────────────── */
-.auth-panel {
-  width: 100%;
-  max-width: 420px;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  padding: 0 24px;
-  padding-top: env(safe-area-inset-top, 20px);
-  padding-bottom: env(safe-area-inset-bottom, 20px);
-}
-
-/* Transições entre painéis */
-.panel--slide-out {
-  animation: slideOut 0.32s ease forwards;
-}
-.panel--slide-in {
-  animation: slideIn 0.32s ease forwards;
-}
-
-@keyframes slideOut {
-  from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(-32px); }
-}
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(32px); }
-  to   { opacity: 1; transform: translateX(0); }
 }
 
 .hidden { display: none !important; }
 
-/* ── WELCOME PANEL ──────────────────────────────── */
+/* ── WELCOME PANEL ── */
 .welcome-panel {
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  padding-top: 80px;
-  padding-bottom: 48px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0 24px;
+  padding-top: max(env(safe-area-inset-top), 60px);
+  padding-bottom: max(env(safe-area-inset-bottom), 48px);
+  max-width: 420px;
+  margin: 0 auto;
 }
 
 .welcome-hero {
@@ -194,7 +140,7 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 12px;
+  gap: 14px;
   animation: fadeUp 0.5s ease 0.1s both;
 }
 
@@ -233,27 +179,34 @@ body {
   animation: fadeUp 0.5s ease 0.2s both;
 }
 
-/* ── FORMS PANEL ────────────────────────────────── */
+/* ── FORMS PANEL ── */
+/* Scroll natural — ocupa o que precisar, sem altura forçada */
 .forms-panel {
-  justify-content: flex-start;
-  padding-top: 16px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px;
+  padding-top: max(env(safe-area-inset-top), 16px);
+  padding-bottom: max(env(safe-area-inset-bottom), 40px);
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .forms-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
-  padding-top: env(safe-area-inset-top, 8px);
+  margin-bottom: 28px;
+  flex-shrink: 0;
 }
 
 .btn-back {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px; height: 44px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--r-md);
   border: 2.5px solid #e8f4f5;
   background: var(--surface);
@@ -262,19 +215,20 @@ body {
   transition: background 0.15s, transform 0.15s;
   flex-shrink: 0;
 }
-.btn-back:active { transform: scale(0.92); background: #f0fafb; }
+.btn-back:active { transform: scale(0.92); }
 
 .forms-logo {
-  width: 40px; height: 40px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
 }
 
-/* ── FORMULÁRIOS ────────────────────────────────── */
+/* ── FORMULÁRIO ── */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding-bottom: 32px;
+  gap: 16px;
+  /* Sem padding-bottom forçado — o forms-panel já tem */
 }
 
 .form-title {
@@ -282,14 +236,13 @@ body {
   font-weight: 900;
   color: var(--text);
   letter-spacing: -0.02em;
-  margin-bottom: 4px;
 }
 
 .form-desc {
   font-size: 0.95rem;
   color: var(--text-soft);
   line-height: 1.5;
-  margin-top: -6px;
+  margin-top: -8px;
 }
 
 .input-group {
@@ -305,7 +258,7 @@ body {
 }
 
 label {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 800;
   color: var(--text-soft);
   text-transform: uppercase;
@@ -318,17 +271,15 @@ input {
   font-weight: 600;
   color: var(--text);
   background: var(--bg);
-  border: 2.5px solid #e0eef0;
+  border: 2.5px solid #dceef0;
   border-radius: var(--r-md);
-  min-height: 52px;
+  height: 52px;
   padding: 0 14px;
-  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   width: 100%;
   -webkit-appearance: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
-
 input::placeholder { color: var(--text-muted); font-weight: 600; }
-
 input:focus {
   outline: none;
   border-color: var(--teal);
@@ -336,50 +287,49 @@ input:focus {
   box-shadow: 0 0 0 4px rgba(60,179,192,0.12);
 }
 
-/* Input com botão olho */
-.input-password-wrap {
-  position: relative;
-}
-.input-password-wrap input {
-  padding-right: 48px;
-}
+.input-password-wrap { position: relative; }
+.input-password-wrap input { padding-right: 48px; }
+
 .btn-eye {
   position: absolute;
-  right: 12px; top: 50%;
+  right: 12px;
+  top: 50%;
   transform: translateY(-50%);
-  background: none; border: none;
+  background: none;
+  border: none;
   color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
-  display: flex; align-items: center;
-  transition: color 0.15s;
+  display: flex;
+  align-items: center;
 }
 .btn-eye.active { color: var(--teal); }
-.btn-eye:hover  { color: var(--teal-dark); }
 
-/* Mensagens de erro/sucesso */
+/* Mensagem de feedback */
 .form-msg {
   font-size: 0.88rem;
   font-weight: 700;
-  min-height: 1.2em;
   border-radius: var(--r-sm);
+  min-height: 0;
   padding: 0;
+  display: none;
 }
-.form-msg:not(:empty) {
+.form-msg.visible {
+  display: block;
   padding: 10px 14px;
 }
-.form-msg--error:not(:empty) {
+.form-msg.error {
   background: var(--danger-bg);
   color: var(--danger);
 }
-.form-msg--success:not(:empty) {
-  background: #f0fff4;
+.form-msg.success {
+  background: var(--success-bg);
   color: var(--success-dark);
 }
 
-/* ════════════════════════════════════════════════════
+/* ════════════════════════════════
    BOTÕES
-   ════════════════════════════════════════════════════ */
+   ════════════════════════════════ */
 .btn {
   font-family: var(--font);
   font-size: 0.95rem;
@@ -395,70 +345,62 @@ input:focus {
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1),
-              box-shadow 0.12s ease,
-              filter 0.12s ease;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  transition: filter 0.12s ease, box-shadow 0.12s ease;
 }
 
-.btn:active {
-  transform: translateY(3px) scale(0.97);
-}
+.btn:active { transform: translateY(3px); }
 
-/* Primário — teal com sombra gamificada */
 .btn-primary {
   background: var(--teal);
   color: #fff;
   box-shadow: 0 5px 0 var(--teal-shadow);
 }
+.btn-primary:active { box-shadow: 0 2px 0 var(--teal-shadow); }
 .btn-primary:hover  { filter: brightness(1.06); }
-.btn-primary:active { box-shadow: 0 2px 0 var(--teal-shadow); transform: translateY(3px); }
 
-/* Outline */
 .btn-outline {
   background: transparent;
   color: var(--teal-dark);
   border: 2.5px solid #cce6e8;
   box-shadow: 0 5px 0 #b5d9dc;
 }
+.btn-outline:active { box-shadow: 0 2px 0 #b5d9dc; }
 .btn-outline:hover  { background: #f0fafb; }
-.btn-outline:active { box-shadow: 0 2px 0 #b5d9dc; transform: translateY(3px); }
 
-/* Ghost */
 .btn-ghost {
   background: transparent;
   color: var(--text-soft);
   font-weight: 800;
   min-height: 44px;
+  box-shadow: none;
 }
-.btn-ghost:hover  { color: var(--teal-dark); }
 .btn-ghost:active { transform: scale(0.96); }
+.btn-ghost:hover  { color: var(--teal-dark); }
 
-/* Block */
 .btn-block { width: 100%; }
+.btn-tall  { min-height: 58px; font-size: 1rem; }
 
-/* Tall */
-.btn-tall { min-height: 58px; font-size: 1rem; }
-
-/* WhatsApp */
 .btn-whatsapp {
   background: #25D366;
   color: #fff;
   box-shadow: 0 5px 0 #128C7E;
-  font-size: 0.92rem;
-  letter-spacing: 0.05em;
   width: 100%;
   min-height: 58px;
   border-radius: var(--r-pill);
+  font-size: 0.92rem;
+  letter-spacing: 0.05em;
 }
-.btn-whatsapp:hover  { filter: brightness(1.05); }
 .btn-whatsapp:active { box-shadow: 0 2px 0 #128C7E; transform: translateY(3px); }
+.btn-whatsapp:hover  { filter: brightness(1.05); }
 
-/* Ícone de logout */
 .btn-icon-logout {
-  display: flex; align-items: center; justify-content: center;
-  width: 42px; height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
   border-radius: var(--r-md);
   border: 2.5px solid #e0eef0;
   background: var(--surface);
@@ -469,40 +411,36 @@ input:focus {
 .btn-icon-logout:hover  { color: var(--danger); border-color: #ffd0d0; background: #fff5f5; }
 .btn-icon-logout:active { transform: scale(0.92); }
 
-/* ════════════════════════════════════════════════════
+/* ════════════════════════════════
    HOME VIEW
-   ════════════════════════════════════════════════════ */
-#home-view {
-  background: var(--bg);
-  align-items: flex-start;
-  justify-content: center;
-}
+   ════════════════════════════════ */
+#home-view { background: var(--bg); }
 
 .home-shell {
   width: 100%;
   max-width: 480px;
+  margin: 0 auto;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 0 20px 32px;
+  padding: 0 20px 40px;
 }
 
-/* Header */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: calc(env(safe-area-inset-top, 16px) + 16px);
-  padding-bottom: 8px;
+  padding-top: max(env(safe-area-inset-top), 20px);
+  padding-bottom: 4px;
 }
 
 .header-logo {
-  width: 46px; height: 46px;
+  width: 46px;
+  height: 46px;
   object-fit: contain;
 }
 
-/* Saudação */
 .greeting-section {
   padding: 20px 0 4px;
   animation: fadeUp 0.4s ease both;
@@ -522,44 +460,37 @@ input:focus {
   line-height: 1.1;
 }
 
-/* ── CARTÃO DE MILHAS ───────────────────────────── */
+/* ── CARTÃO ── */
 .milhas-card {
   position: relative;
   margin: 24px 0 28px;
   border-radius: 28px;
   overflow: hidden;
-  background: linear-gradient(135deg, #1A7175 0%, #3CB3C0 50%, #5ecdd8 100%);
+  background: linear-gradient(135deg, #1A7175 0%, #3CB3C0 55%, #5ecdd8 100%);
   box-shadow:
     0 8px 0 var(--teal-shadow),
     0 20px 50px rgba(26,113,117,0.35);
-  animation: cardEntrance 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.15s both;
+  animation: cardEntrance 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
 }
 
 @keyframes cardEntrance {
-  from { opacity: 0; transform: translateY(24px) scale(0.95); }
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Efeito brilho no cartão */
 .milhas-card-shine {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    120deg,
-    transparent 30%,
-    rgba(255,255,255,0.12) 50%,
-    transparent 70%
-  );
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
   pointer-events: none;
   animation: cardShine 4s ease-in-out infinite;
 }
 
 @keyframes cardShine {
-  0%   { transform: translateX(-100%) skewX(-15deg); }
+  0%        { transform: translateX(-100%) skewX(-15deg); }
   30%, 100% { transform: translateX(200%) skewX(-15deg); }
 }
 
-/* Padrão decorativo (círculos) */
 .milhas-card::before,
 .milhas-card::after {
   content: "";
@@ -568,14 +499,8 @@ input:focus {
   background: rgba(255,255,255,0.06);
   pointer-events: none;
 }
-.milhas-card::before {
-  width: 220px; height: 220px;
-  top: -60px; right: -60px;
-}
-.milhas-card::after {
-  width: 140px; height: 140px;
-  bottom: -40px; left: -30px;
-}
+.milhas-card::before { width: 220px; height: 220px; top: -60px; right: -60px; }
+.milhas-card::after  { width: 140px; height: 140px; bottom: -40px; left: -30px; }
 
 .milhas-card-content {
   position: relative;
@@ -593,7 +518,6 @@ input:focus {
   align-items: center;
   gap: 6px;
   background: rgba(255,255,255,0.18);
-  backdrop-filter: blur(8px);
   color: #fff;
   font-size: 0.72rem;
   font-weight: 900;
@@ -601,6 +525,7 @@ input:focus {
   padding: 6px 14px;
   border-radius: var(--r-pill);
   border: 1px solid rgba(255,255,255,0.25);
+  width: fit-content;
 }
 
 .milhas-card-middle {
@@ -639,11 +564,7 @@ input:focus {
   align-items: flex-end;
 }
 
-.milhas-field {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+.milhas-field { display: flex; flex-direction: column; gap: 3px; }
 .milhas-field--right { text-align: right; align-items: flex-end; }
 
 .milhas-field-label {
@@ -664,24 +585,28 @@ input:focus {
   text-overflow: ellipsis;
 }
 
-/* ════════════════════════════════════════════════════
-   ANIMAÇÕES GERAIS
-   ════════════════════════════════════════════════════ */
+/* ════════════════════════════════
+   ANIMAÇÕES
+   ════════════════════════════════ */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ════════════════════════════════════════════════════
-   RESPONSIVO
-   ════════════════════════════════════════════════════ */
-@media (max-width: 400px) {
-  .welcome-title      { font-size: 1.9rem; }
-  .milhas-value       { font-size: 3.2rem; }
-  .milhas-card-content { padding: 22px 20px 20px; min-height: 210px; }
-  .greeting-name      { font-size: 1.5rem; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
 }
 
-@media (min-height: 800px) {
-  .welcome-panel { padding-top: 120px; }
+/* ════════════════════════════════
+   RESPONSIVO
+   ════════════════════════════════ */
+@media (max-width: 380px) {
+  .welcome-title   { font-size: 1.85rem; }
+  .milhas-value    { font-size: 3rem; }
+  .greeting-name   { font-size: 1.5rem; }
+  .milhas-card-content { padding: 20px 18px; min-height: 210px; }
 }
