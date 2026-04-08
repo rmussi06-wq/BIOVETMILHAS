@@ -215,32 +215,98 @@
     </div>
   </section>
 
+  <!-- ═══════════════════════════════════════════════
+       NAVEGAÇÃO INLINE (funciona mesmo se app.js falhar)
+       ═══════════════════════════════════════════════ -->
   <script>
     const splash = document.getElementById('splash');
 
-    window.addEventListener('load', () => {
-      setTimeout(() => {
+    window.addEventListener('load', function() {
+      setTimeout(function() {
         splash.classList.add('splash--out');
-        setTimeout(() => {
+        setTimeout(function() {
           splash.style.display = 'none';
-          // FIX: Garante que auth-view fica ativo após o splash
-          const authView = document.getElementById('auth-view');
-          const homeView = document.getElementById('home-view');
-          if (!homeView.classList.contains('active') && !authView.classList.contains('active')) {
-            authView.classList.add('active');
+          var authV = document.getElementById('auth-view');
+          var homeV = document.getElementById('home-view');
+          if (!homeV.classList.contains('active') && !authV.classList.contains('active')) {
+            authV.classList.add('active');
           }
         }, 600);
       }, 1800);
     });
 
-    window.showLoadingOverlay = () => {
+    window.showLoadingOverlay = function() {
       splash.style.display = 'flex';
       splash.classList.remove('splash--out');
     };
-    window.hideLoadingOverlay = () => {
+    window.hideLoadingOverlay = function() {
       splash.classList.add('splash--out');
-      setTimeout(() => { splash.style.display = 'none'; }, 500);
+      setTimeout(function() { splash.style.display = 'none'; }, 500);
     };
+
+    // ── NAVEGAÇÃO UI (independente do Firebase) ──────
+    // Estas funções são registradas aqui para garantir que
+    // os botões funcionem MESMO se o app.js (módulo) falhar
+    // ao carregar os imports do Firebase.
+
+    function _navMostrarForm(id) {
+      var forms = document.querySelectorAll('#forms-panel .form');
+      forms.forEach(function(f) { f.classList.add('hidden'); });
+      var alvo = document.getElementById(id);
+      if (alvo) alvo.classList.remove('hidden');
+      window.scrollTo(0, 0);
+    }
+
+    function _navAbrirForms(formId) {
+      document.getElementById('welcome-screen').style.display = 'none';
+      document.getElementById('forms-panel').classList.remove('hidden');
+      _navMostrarForm(formId);
+    }
+
+    function _navVoltarWelcome() {
+      document.getElementById('forms-panel').classList.add('hidden');
+      document.getElementById('welcome-screen').style.display = '';
+      var loginErr = document.getElementById('login-error');
+      if (loginErr) { loginErr.textContent = ''; loginErr.className = 'form-msg'; }
+      window.scrollTo(0, 0);
+    }
+
+    // Botões da Welcome Screen
+    document.getElementById('btn-go-login').addEventListener('click', function() {
+      _navAbrirForms('login-form');
+    });
+    document.getElementById('btn-go-register').addEventListener('click', function() {
+      _navAbrirForms('register-form');
+    });
+
+    // Botão voltar
+    document.getElementById('back-to-welcome').addEventListener('click', function() {
+      _navVoltarWelcome();
+    });
+
+    // Links entre formulários
+    document.getElementById('show-reset').addEventListener('click', function() {
+      _navMostrarForm('reset-form');
+    });
+    document.getElementById('show-register').addEventListener('click', function() {
+      _navMostrarForm('register-form');
+    });
+    document.getElementById('show-login-from-register').addEventListener('click', function() {
+      _navMostrarForm('login-form');
+    });
+    document.getElementById('show-login-from-reset').addEventListener('click', function() {
+      _navMostrarForm('login-form');
+    });
+
+    // Toggle senha
+    document.querySelectorAll('.btn-eye').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+        btn.classList.toggle('active');
+      });
+    });
   </script>
 
   <script type="module" src="app.js"></script>

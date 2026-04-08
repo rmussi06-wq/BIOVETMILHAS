@@ -1,4 +1,4 @@
-const CACHE_NAME = 'biovet-v5';
+const CACHE_NAME = 'biovet-v6';
 
 const ASSETS = [
   '/',

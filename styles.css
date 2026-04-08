@@ -72,8 +72,8 @@ body {
 }
 
 .splash-logo {
-  width: 110px;
-  height: 110px;
+  width: 160px;
+  height: 160px;
   object-fit: contain;
   filter: drop-shadow(0 10px 24px rgba(0,0,0,0.18));
 }
@@ -154,8 +154,8 @@ body {
 }
 
 .welcome-logo {
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: 150px;
   object-fit: contain;
   filter: drop-shadow(0 6px 16px rgba(60,179,192,0.25));
   animation: floatLogo 4s ease-in-out infinite;
@@ -228,8 +228,8 @@ body {
 .btn-back:active { transform: scale(0.92); }
 
 .forms-logo {
-  width: 38px;
-  height: 38px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
 }
 
@@ -456,8 +456,8 @@ input:focus {
 }
 
 .header-logo {
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
 }
 
