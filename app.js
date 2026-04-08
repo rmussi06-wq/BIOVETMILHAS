@@ -160,7 +160,6 @@ if (isRegistering) return;
 if (user) {
 if (window.showLoadingOverlay) window.showLoadingOverlay();
 
-```
 try {
   const snap = await getDoc(doc(db, 'users', user.uid));
 
@@ -199,7 +198,6 @@ try {
     tipo: 'error'
   });
 }
-```
 
 } else {
 mostrarAuthView();
@@ -263,7 +261,6 @@ iniciarLoading(btn);
 try {
 isRegistering = true;
 
-```
 const cred = await createUserWithEmailAndPassword(auth, email, senha);
 await updateProfile(cred.user, { displayName: nome });
 
@@ -288,7 +285,6 @@ mostrarAuthView({
   mensagem: 'Cadastro realizado! Aguarde aprovacao para acessar.',
   tipo: 'success'
 });
-```
 
 } catch (err) {
 console.error(err);
