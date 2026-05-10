@@ -1,41 +1,66 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
 import {
-getAuth,
-onAuthStateChanged,
-signInWithEmailAndPassword,
-createUserWithEmailAndPassword,
-sendPasswordResetEmail,
-signOut,
-updateProfile
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
+  updateProfile
 } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js';
 import {
-getFirestore,
-doc,
-setDoc,
-getDoc
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  collection,
+  query,
+  orderBy
 } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
 
-// ── CONFIG ───────────────────────────────────────
+// ── CONFIG ───────────────────────────────────────────────────────────────────
 const firebaseConfig = {
-apiKey: "AIzaSyCW2HG6ECzk6OD0cenYqY1R3rsJ1Oecgek",
-authDomain: "biovet-parceiro-vet.firebaseapp.com",
-projectId: "biovet-parceiro-vet",
-storageBucket: "biovet-parceiro-vet.firebasestorage.app",
-messagingSenderId: "549792200166",
-appId: "1:549792200166:web:0cf14a3895227b79031227"
+  apiKey:            "AIzaSyCW2HG6ECzk6OD0cenYqY1R3rsJ1Oecgek",
+  authDomain:        "biovet-parceiro-vet.firebaseapp.com",
+  projectId:         "biovet-parceiro-vet",
+  storageBucket:     "biovet-parceiro-vet.firebasestorage.app",
+  messagingSenderId: "549792200166",
+  appId:             "1:549792200166:web:0cf14a3895227b79031227"
 };
-const APPS_SCRIPT_URL = '';
 
-// ── FIREBASE ─────────────────────────────────────
+// EmailJS — preencha para ativar notificações de novos cadastros por e-mail
+// 1. Crie conta em https://www.emailjs.com/
+// 2. Crie um serviço de e-mail e um template com variáveis: {{vet_name}}, {{vet_crmv}}, {{vet_email}}
+// 3. Preencha as constantes abaixo com seus IDs
+const EMAILJS_SERVICE_ID  = '';   // ex: 'service_abc123'
+const EMAILJS_TEMPLATE_ID = '';   // ex: 'template_xyz456'
+const EMAILJS_PUBLIC_KEY  = '';   // ex: 'user_AbCdEfGhIj...'
+const NOTIFICATION_EMAIL  = '';   // e-mail que receberá os avisos
+
+const WHATSAPP_NUMBER = '5514997132879';
+
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
 const fbApp = initializeApp(firebaseConfig);
 const auth  = getAuth(fbApp);
 const db    = getFirestore(fbApp);
 
-let isRegistering = false;
+// ── ESTADO ───────────────────────────────────────────────────────────────────
+let isRegistering      = false;
+let adminAllUsers      = [];
+let currentEditUid     = null;
+let carouselImages     = [];
+let carouselIndex      = 0;
+let carouselTimer      = null;
+let dashCotacao        = { pontosBase: 1000, valorReais: 15 };
 
-// ── ELEMENTOS ────────────────────────────────────
+// ── ELEMENTOS ─────────────────────────────────────────────────────────────────
 const authView      = document.getElementById('auth-view');
 const homeView      = document.getElementById('home-view');
+const adminView     = document.getElementById('admin-view');
+const dashboardView = document.getElementById('dashboard-view');
+
 const welcomeScreen = document.getElementById('welcome-screen');
 const formsPanel    = document.getElementById('forms-panel');
 
@@ -65,83 +90,85 @@ const whatsappLink   = document.getElementById('whatsapp-link');
 const cardUserNameEl = document.getElementById('card-user-name');
 const cardUserCrmvEl = document.getElementById('card-user-crmv');
 
-// ── VIEWS ────────────────────────────────────────
-// Nota: a navegação entre telas (botões da welcome, voltar,
-// troca de forms) está no script inline do index.html para
-// garantir que funcione mesmo se este módulo falhar ao carregar.
+// ── VIEWS ─────────────────────────────────────────────────────────────────────
+function ocultarTodasViews() {
+  [authView, homeView, adminView, dashboardView].forEach(v => v.classList.remove('active'));
+}
 
 function mostrarAuthView(opcoes) {
   opcoes = opcoes || {};
   if (window.hideLoadingOverlay) window.hideLoadingOverlay();
-
-  homeView.classList.remove('active');
+  ocultarTodasViews();
   authView.classList.add('active');
 
-  // Sempre volta para welcome
   formsPanel.classList.add('hidden');
   welcomeScreen.style.display = '';
 
-  // Limpa campos e mensagens
   loginEmailInput.value    = '';
   loginPasswordInput.value = '';
   limparMensagem(loginError);
 
-  // Se vier com opções, abre direto no form com mensagem
   if (opcoes.form) {
-    // Usa as funções globais do inline script
     if (typeof _navAbrirForms === 'function') {
       _navAbrirForms(opcoes.form);
     } else {
-      // Fallback caso inline não tenha carregado
       welcomeScreen.style.display = 'none';
       formsPanel.classList.remove('hidden');
-      [loginForm, registerForm, resetForm].forEach(function(f) {
-        if (f) f.classList.add('hidden');
-      });
-      var alvo = document.getElementById(opcoes.form);
-      if (alvo) alvo.classList.remove('hidden');
+      [loginForm, registerForm, resetForm].forEach(f => f?.classList.add('hidden'));
+      document.getElementById(opcoes.form)?.classList.remove('hidden');
     }
     if (opcoes.elId && opcoes.mensagem) {
-      var el = document.getElementById(opcoes.elId);
-      if (el) mostrarMensagem(el, opcoes.mensagem, opcoes.tipo || 'error');
+      mostrarMensagem(document.getElementById(opcoes.elId), opcoes.mensagem, opcoes.tipo || 'error');
     }
   }
-
   window.scrollTo(0, 0);
 }
 
 function mostrarHomeView() {
   if (window.hideLoadingOverlay) window.hideLoadingOverlay();
-  authView.classList.remove('active');
+  ocultarTodasViews();
   homeView.classList.add('active');
   window.scrollTo(0, 0);
 }
 
-// ── OBSERVADOR DE AUTENTICAÇÃO ───────────────────
+function mostrarAdminView() {
+  if (window.hideLoadingOverlay) window.hideLoadingOverlay();
+  ocultarTodasViews();
+  adminView.classList.add('active');
+  window.scrollTo(0, 0);
+}
 
+function mostrarDashboardView() {
+  if (window.hideLoadingOverlay) window.hideLoadingOverlay();
+  ocultarTodasViews();
+  dashboardView.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── AUTENTICAÇÃO ──────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
   if (isRegistering) return;
 
   if (user) {
     if (window.showLoadingOverlay) window.showLoadingOverlay();
-
     try {
       const snap = await getDoc(doc(db, 'users', user.uid));
 
       if (!snap.exists()) {
         await signOut(auth);
-        mostrarAuthView({
-          form: 'login-form',
-          elId: 'login-error',
-          mensagem: 'Cadastro nao encontrado.',
-          tipo: 'error'
-        });
+        mostrarAuthView({ form: 'login-form', elId: 'login-error', mensagem: 'Cadastro não encontrado.', tipo: 'error' });
         return;
       }
 
       const data = snap.data();
 
-      if (data.approved === true) {
+      if (data.role === 'admin') {
+        await carregarAdmin();
+        mostrarAdminView();
+      } else if (data.role === 'dashboard') {
+        await carregarDashboard();
+        mostrarDashboardView();
+      } else if (data.approved === true) {
         await carregarDadosHome(user, data);
         mostrarHomeView();
       } else {
@@ -149,28 +176,21 @@ onAuthStateChanged(auth, async (user) => {
         mostrarAuthView({
           form: 'login-form',
           elId: 'login-error',
-          mensagem: 'Cadastro ainda nao aprovado. Aguarde o contato da equipe Biovetfarma.',
+          mensagem: 'Cadastro ainda não aprovado. Aguarde o contato da equipe Biovetfarma.',
           tipo: 'error'
         });
       }
     } catch (err) {
       console.error(err);
       await signOut(auth);
-      mostrarAuthView({
-        form: 'login-form',
-        elId: 'login-error',
-        mensagem: 'Erro ao validar cadastro. Tente novamente.',
-        tipo: 'error'
-      });
+      mostrarAuthView({ form: 'login-form', elId: 'login-error', mensagem: 'Erro ao validar cadastro. Tente novamente.', tipo: 'error' });
     }
-
   } else {
     mostrarAuthView();
   }
 });
 
-// ── LOGIN ────────────────────────────────────────
-
+// ── LOGIN ──────────────────────────────────────────────────────────────────────
 loginForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   limparMensagem(loginError);
@@ -188,7 +208,6 @@ loginForm?.addEventListener('submit', async (e) => {
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged cuida do redirecionamento
   } catch (err) {
     console.error(err);
     mostrarMensagem(loginError, traduzErro(err.code), 'error');
@@ -196,8 +215,7 @@ loginForm?.addEventListener('submit', async (e) => {
   }
 });
 
-// ── CADASTRO ─────────────────────────────────────
-
+// ── CADASTRO ──────────────────────────────────────────────────────────────────
 registerForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   limparMensagem(registerError);
@@ -216,7 +234,7 @@ registerForm?.addEventListener('submit', async (e) => {
   }
 
   if (senha !== senhaConf) {
-    mostrarMensagem(registerError, 'As senhas nao conferem.', 'error');
+    mostrarMensagem(registerError, 'As senhas não conferem.', 'error');
     return;
   }
 
@@ -232,12 +250,19 @@ registerForm?.addEventListener('submit', async (e) => {
     await setDoc(doc(db, 'users', cred.user.uid), {
       nome, cpf, dataNascimento, crmv, email,
       pontos: 0,
-      approved: false
+      approved: false,
+      role: 'vet',
+      criadoEm: new Date().toISOString()
     });
 
-    if (APPS_SCRIPT_URL) {
-      fetch(`${APPS_SCRIPT_URL}?acao=cadastro&crmv=${encodeURIComponent(crmv)}&nome=${encodeURIComponent(nome)}`)
-        .catch(err => console.error('Apps Script:', err));
+    // Notificação por e-mail via EmailJS
+    if (EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
+      window.emailjs?.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email:  NOTIFICATION_EMAIL,
+        vet_name:  nome,
+        vet_crmv:  crmv,
+        vet_email: email,
+      }, EMAILJS_PUBLIC_KEY).catch(err => console.error('EmailJS:', err));
     }
 
     await new Promise(r => setTimeout(r, 400));
@@ -247,7 +272,7 @@ registerForm?.addEventListener('submit', async (e) => {
     mostrarAuthView({
       form: 'login-form',
       elId: 'login-error',
-      mensagem: 'Cadastro realizado! Aguarde aprovacao para acessar.',
+      mensagem: 'Cadastro realizado! Aguarde aprovação para acessar.',
       tipo: 'success'
     });
 
@@ -260,8 +285,7 @@ registerForm?.addEventListener('submit', async (e) => {
   }
 });
 
-// ── RESET DE SENHA ───────────────────────────────
-
+// ── RESET DE SENHA ────────────────────────────────────────────────────────────
 resetForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   limparMensagem(resetInfo);
@@ -286,12 +310,12 @@ resetForm?.addEventListener('submit', async (e) => {
   }
 });
 
-// ── LOGOUT ───────────────────────────────────────
-
+// ── LOGOUT ────────────────────────────────────────────────────────────────────
 logoutBtn?.addEventListener('click', () => signOut(auth));
+document.getElementById('admin-logout-btn')?.addEventListener('click', () => signOut(auth));
+document.getElementById('dashboard-logout-btn')?.addEventListener('click', () => signOut(auth));
 
-// ── DADOS DA HOME ────────────────────────────────
-
+// ── HOME ──────────────────────────────────────────────────────────────────────
 async function carregarDadosHome(user, data) {
   const nome   = data?.nome   || user.displayName || user.email?.split('@')[0] || 'Parceiro';
   const crmv   = data?.crmv   || '—';
@@ -303,12 +327,446 @@ async function carregarDadosHome(user, data) {
 
   animarContador(pointsValueEl, 0, pontos, 1200);
 
-  const msg = encodeURIComponent(`Ola, sou o(a) Dr(a). ${nome} e gostaria de trocar minhas Biovet Milhas.`);
-  if (whatsappLink) whatsappLink.href = `https://wa.me/5514997132879?text=${msg}`;
+  const msg = encodeURIComponent(`Olá, sou o(a) Dr(a). ${nome} e gostaria de trocar meus Biovet Pontos.`);
+  if (whatsappLink) whatsappLink.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
+
+  await carregarCarrosel();
 }
 
-// ── CONTADOR ANIMADO ─────────────────────────────
+// ── CARROSEL ──────────────────────────────────────────────────────────────────
+async function carregarCarrosel() {
+  try {
+    const snap = await getDoc(doc(db, 'config', 'carousel'));
+    const data = snap.exists() ? snap.data() : {};
+    carouselImages = [data.slot0, data.slot1, data.slot2].filter(Boolean);
 
+    if (carouselImages.length === 0) return;
+
+    const carousel = document.getElementById('home-carousel');
+    const track    = document.getElementById('carousel-track');
+    const dotsEl   = document.getElementById('carousel-dots');
+
+    carousel.style.display = '';
+    track.innerHTML  = '';
+    dotsEl.innerHTML = '';
+
+    carouselImages.forEach((src, i) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.className = 'carousel-slide';
+      img.alt = `Promoção ${i + 1}`;
+      track.appendChild(img);
+
+      const dot = document.createElement('button');
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', `Slide ${i + 1}`);
+      dot.addEventListener('click', () => irParaSlide(i));
+      dotsEl.appendChild(dot);
+    });
+
+    carouselIndex = 0;
+    iniciarTimerCarrosel();
+  } catch (err) {
+    console.error('Carrosel:', err);
+  }
+}
+
+function irParaSlide(idx) {
+  carouselIndex = idx;
+  const track = document.getElementById('carousel-track');
+  if (track) track.style.transform = `translateX(-${idx * 100}%)`;
+  document.querySelectorAll('#carousel-dots .carousel-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+}
+
+function iniciarTimerCarrosel() {
+  if (carouselTimer) clearInterval(carouselTimer);
+  if (carouselImages.length < 2) return;
+  carouselTimer = setInterval(() => {
+    const next = (carouselIndex + 1) % carouselImages.length;
+    irParaSlide(next);
+  }, 4500);
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+async function carregarAdmin() {
+  // Carrega cotação
+  try {
+    const snap = await getDoc(doc(db, 'config', 'settings'));
+    if (snap.exists()) {
+      const d = snap.data();
+      const pontosInput = document.getElementById('cotacao-pontos');
+      const valorInput  = document.getElementById('cotacao-valor');
+      if (pontosInput) pontosInput.value = d.pontosBase ?? 1000;
+      if (valorInput)  valorInput.value  = d.valorReais ?? 15;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  // Carrega todos os usuários
+  try {
+    const q    = query(collection(db, 'users'), orderBy('nome'));
+    const snap = await getDocs(q);
+    adminAllUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    renderAdminUsers('');
+  } catch (err) {
+    console.error(err);
+    const el = document.getElementById('admin-users-list');
+    if (el) el.innerHTML = '<p class="empty-state">Erro ao carregar usuários.</p>';
+  }
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+      btn.classList.add('tab-btn--active');
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById(btn.dataset.tab)?.classList.remove('hidden');
+    });
+  });
+
+  // Search
+  document.getElementById('admin-search')?.addEventListener('input', (e) => {
+    renderAdminUsers(e.target.value.trim().toLowerCase());
+  });
+
+  // Salvar cotação
+  document.getElementById('btn-salvar-cotacao')?.addEventListener('click', salvarCotacao);
+
+  // Modal
+  document.getElementById('btn-modal-cancel')?.addEventListener('click', fecharModal);
+  document.getElementById('btn-modal-save')?.addEventListener('click', salvarPontosModal);
+}
+
+function renderAdminUsers(filtro) {
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+
+  const lista = filtro
+    ? adminAllUsers.filter(u =>
+        u.nome?.toLowerCase().includes(filtro) ||
+        u.crmv?.toLowerCase().includes(filtro) ||
+        u.email?.toLowerCase().includes(filtro)
+      )
+    : adminAllUsers;
+
+  // Exclui admins e dashboards da lista
+  const parceiros = lista.filter(u => !u.role || u.role === 'vet');
+
+  if (parceiros.length === 0) {
+    el.innerHTML = '<p class="empty-state">Nenhum parceiro encontrado.</p>';
+    return;
+  }
+
+  el.innerHTML = parceiros.map(u => `
+    <div class="user-card">
+      <div class="user-card-header">
+        <div>
+          <div class="user-card-name">${esc(u.nome || '—')}</div>
+          <div class="user-card-meta">CRMV: ${esc(u.crmv || '—')} &nbsp;·&nbsp; ${esc(u.email || '—')}</div>
+        </div>
+        <span class="status-badge ${u.approved ? 'status-badge--approved' : 'status-badge--pending'}">
+          ${u.approved ? 'Aprovado' : 'Pendente'}
+        </span>
+      </div>
+      <div class="user-card-footer">
+        <div class="user-card-points">
+          ${(u.pontos ?? 0).toLocaleString('pt-BR')}<span>pontos</span>
+        </div>
+        <div class="user-card-actions">
+          <button class="btn-sm btn-sm--teal" onclick="abrirModalPontos('${u.uid}')">Pontos</button>
+          ${u.approved
+            ? `<button class="btn-sm btn-sm--red" onclick="toggleAprovacao('${u.uid}', false)">Revogar</button>`
+            : `<button class="btn-sm btn-sm--green" onclick="toggleAprovacao('${u.uid}', true)">Aprovar</button>`
+          }
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.abrirModalPontos = function(uid) {
+  const user = adminAllUsers.find(u => u.uid === uid);
+  if (!user) return;
+  currentEditUid = uid;
+  document.getElementById('modal-user-label').textContent = user.nome || user.email || uid;
+  document.getElementById('modal-pontos-input').value = user.pontos ?? 0;
+  limparMensagem(document.getElementById('modal-msg'));
+  document.getElementById('modal-pontos').classList.remove('hidden');
+};
+
+function fecharModal() {
+  document.getElementById('modal-pontos').classList.add('hidden');
+  currentEditUid = null;
+}
+
+async function salvarPontosModal() {
+  if (!currentEditUid) return;
+  const val = parseInt(document.getElementById('modal-pontos-input').value, 10);
+  if (isNaN(val) || val < 0) {
+    mostrarMensagem(document.getElementById('modal-msg'), 'Valor inválido.', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-modal-save');
+  iniciarLoading(btn);
+  try {
+    await updateDoc(doc(db, 'users', currentEditUid), { pontos: val });
+    const u = adminAllUsers.find(u => u.uid === currentEditUid);
+    if (u) u.pontos = val;
+    renderAdminUsers(document.getElementById('admin-search')?.value.trim().toLowerCase() || '');
+    fecharModal();
+  } catch (err) {
+    console.error(err);
+    mostrarMensagem(document.getElementById('modal-msg'), 'Erro ao salvar. Tente novamente.', 'error');
+  } finally {
+    pararLoading(btn);
+  }
+}
+
+window.toggleAprovacao = async function(uid, aprovar) {
+  try {
+    await updateDoc(doc(db, 'users', uid), { approved: aprovar });
+    const u = adminAllUsers.find(u => u.uid === uid);
+    if (u) u.approved = aprovar;
+    renderAdminUsers(document.getElementById('admin-search')?.value.trim().toLowerCase() || '');
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao atualizar aprovação. Tente novamente.');
+  }
+};
+
+async function salvarCotacao() {
+  const pontosBase = parseInt(document.getElementById('cotacao-pontos')?.value, 10);
+  const valorReais = parseFloat(document.getElementById('cotacao-valor')?.value);
+  const msgEl      = document.getElementById('cotacao-msg');
+
+  if (isNaN(pontosBase) || pontosBase <= 0 || isNaN(valorReais) || valorReais < 0) {
+    mostrarMensagem(msgEl, 'Valores inválidos.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-salvar-cotacao');
+  iniciarLoading(btn);
+  try {
+    await setDoc(doc(db, 'config', 'settings'), { pontosBase, valorReais }, { merge: true });
+    mostrarMensagem(msgEl, 'Cotação salva com sucesso!', 'success');
+  } catch (err) {
+    console.error(err);
+    mostrarMensagem(msgEl, 'Erro ao salvar. Tente novamente.', 'error');
+  } finally {
+    pararLoading(btn);
+  }
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+async function carregarDashboard() {
+  // Cotação
+  try {
+    const snap = await getDoc(doc(db, 'config', 'settings'));
+    if (snap.exists()) {
+      const d = snap.data();
+      dashCotacao.pontosBase = d.pontosBase ?? 1000;
+      dashCotacao.valorReais = d.valorReais ?? 15;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  atualizarTextoCotacaoDash();
+
+  // Busca
+  const searchInput = document.getElementById('dash-search');
+  const searchBtn   = document.getElementById('btn-dash-search');
+  searchBtn?.addEventListener('click', () => executarBuscaDash(searchInput?.value.trim()));
+  searchInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') executarBuscaDash(searchInput.value.trim());
+  });
+
+  // Slots carrosel
+  await carregarSlotsCarrosel();
+}
+
+function atualizarTextoCotacaoDash() {
+  const el = document.getElementById('dash-cotacao-text');
+  if (!el) return;
+  const pts = dashCotacao.pontosBase.toLocaleString('pt-BR');
+  const val = dashCotacao.valorReais.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  el.textContent = `${pts} pts = R$ ${val}`;
+}
+
+async function executarBuscaDash(termo) {
+  const resultEl = document.getElementById('dash-result');
+  if (!resultEl) return;
+  if (!termo) {
+    resultEl.innerHTML = '';
+    return;
+  }
+
+  resultEl.innerHTML = '<p class="empty-state">Buscando…</p>';
+
+  try {
+    const q    = query(collection(db, 'users'), orderBy('nome'));
+    const snap = await getDocs(q);
+    const termoLower = termo.toLowerCase();
+
+    const encontrados = snap.docs
+      .map(d => ({ uid: d.id, ...d.data() }))
+      .filter(u =>
+        (!u.role || u.role === 'vet') &&
+        (u.nome?.toLowerCase().includes(termoLower) || u.crmv?.toLowerCase().includes(termoLower))
+      );
+
+    if (encontrados.length === 0) {
+      resultEl.innerHTML = '<p class="empty-state">Nenhum parceiro encontrado.</p>';
+      return;
+    }
+
+    resultEl.innerHTML = encontrados.map(u => {
+      const pontos  = u.pontos ?? 0;
+      const equiv   = calcEquivalencia(pontos);
+      return `
+        <div class="dash-user-card">
+          <div>
+            <div class="dash-user-name">${esc(u.nome || '—')}</div>
+            <div class="dash-user-meta">CRMV: ${esc(u.crmv || '—')} &nbsp;·&nbsp; ${esc(u.email || '—')}</div>
+          </div>
+          <div class="dash-user-points">
+            <span class="dash-points-num">${pontos.toLocaleString('pt-BR')}</span>
+            <span class="dash-points-label">pontos</span>
+          </div>
+          ${equiv ? `<div class="dash-cotacao-equiv">≈ R$ ${equiv}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    resultEl.innerHTML = '<p class="empty-state">Erro na busca. Tente novamente.</p>';
+  }
+}
+
+function calcEquivalencia(pontos) {
+  if (!dashCotacao.pontosBase || !dashCotacao.valorReais) return null;
+  const valor = (pontos / dashCotacao.pontosBase) * dashCotacao.valorReais;
+  return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ── CARROSEL UPLOAD (Dashboard) ───────────────────────────────────────────────
+async function carregarSlotsCarrosel() {
+  const container = document.getElementById('carousel-slots');
+  if (!container) return;
+
+  let carouselData = {};
+  try {
+    const snap = await getDoc(doc(db, 'config', 'carousel'));
+    if (snap.exists()) carouselData = snap.data();
+  } catch (err) {
+    console.error(err);
+  }
+
+  container.innerHTML = '';
+
+  [0, 1, 2].forEach(i => {
+    const slotKey = `slot${i}`;
+    const url     = carouselData[slotKey] || '';
+
+    const slot = document.createElement('div');
+    slot.className = 'carousel-slot';
+    slot.innerHTML = `
+      ${url
+        ? `<img src="${url}" class="carousel-slot-preview" alt="Imagem ${i + 1}">`
+        : `<div class="carousel-slot-empty">
+             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+               <rect x="3" y="3" width="18" height="18" rx="3"/>
+               <circle cx="8.5" cy="8.5" r="1.5"/>
+               <polyline points="21 15 16 10 5 21"/>
+             </svg>
+             <span>Sem imagem</span>
+           </div>`
+      }
+      <div class="carousel-slot-footer">
+        <span class="carousel-slot-label">Imagem ${i + 1}</span>
+        <div class="carousel-slot-actions">
+          <label class="btn-sm btn-sm--teal" style="cursor:pointer">
+            Upload
+            <input type="file" accept="image/*" style="display:none" data-slot="${i}" class="slot-file-input">
+          </label>
+          ${url ? `<button class="btn-sm btn-sm--red" data-slot="${i}" onclick="removerImagemSlot(${i})">Remover</button>` : ''}
+        </div>
+      </div>
+    `;
+    container.appendChild(slot);
+  });
+
+  container.querySelectorAll('.slot-file-input').forEach(input => {
+    input.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Imagem muito grande. Máximo 2 MB.');
+        return;
+      }
+      const slotIdx = parseInt(input.dataset.slot, 10);
+      await uploadImagemSlot(slotIdx, file);
+    });
+  });
+}
+
+async function uploadImagemSlot(slotIdx, file) {
+  const container = document.getElementById('carousel-slots');
+  const slots     = container?.querySelectorAll('.carousel-slot');
+  const slot      = slots?.[slotIdx];
+  if (!slot) return;
+
+  const uploadLabel = slot.querySelector('label.btn-sm');
+  if (uploadLabel) { uploadLabel.textContent = 'Enviando…'; uploadLabel.style.opacity = '0.6'; }
+
+  try {
+    const base64 = await redimensionarImagem(file);
+    const slotKey = `slot${slotIdx}`;
+    await setDoc(doc(db, 'config', 'carousel'), { [slotKey]: base64 }, { merge: true });
+    await carregarSlotsCarrosel();
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao fazer upload. Tente novamente.');
+    if (uploadLabel) { uploadLabel.textContent = 'Upload'; uploadLabel.style.opacity = '1'; }
+  }
+}
+
+window.removerImagemSlot = async function(slotIdx) {
+  if (!confirm(`Remover imagem ${slotIdx + 1}?`)) return;
+  try {
+    await setDoc(doc(db, 'config', 'carousel'), { [`slot${slotIdx}`]: '' }, { merge: true });
+    await carregarSlotsCarrosel();
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao remover. Tente novamente.');
+  }
+};
+
+function redimensionarImagem(file, maxWidth = 1200, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const ratio  = Math.min(maxWidth / img.width, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── UTILITÁRIOS DE UI ─────────────────────────────────────────────────────────
 function animarContador(el, de, para, duracao) {
   if (!el) return;
   if (para === 0) { el.textContent = '0'; return; }
@@ -322,8 +780,6 @@ function animarContador(el, de, para, duracao) {
   }
   requestAnimationFrame(passo);
 }
-
-// ── UTILITÁRIOS DE UI ────────────────────────────
 
 function mostrarMensagem(el, msg, tipo) {
   if (!el) return;
@@ -355,15 +811,22 @@ function pararLoading(btn) {
   btn.style.opacity = '1';
 }
 
-// ── ERROS FIREBASE ───────────────────────────────
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
+// ── ERROS FIREBASE ────────────────────────────────────────────────────────────
 function traduzErro(code) {
   const mapa = {
-    'auth/invalid-email':        'E-mail invalido.',
-    'auth/user-disabled':        'Usuario desativado.',
-    'auth/user-not-found':       'E-mail nao cadastrado.',
+    'auth/invalid-email':        'E-mail inválido.',
+    'auth/user-disabled':        'Usuário desativado.',
+    'auth/user-not-found':       'E-mail não cadastrado.',
     'auth/wrong-password':       'Senha incorreta.',
-    'auth/email-already-in-use': 'E-mail ja cadastrado.',
+    'auth/email-already-in-use': 'E-mail já cadastrado.',
     'auth/weak-password':        'Senha fraca. Use pelo menos 6 caracteres.',
     'auth/invalid-credential':   'E-mail ou senha incorretos.',
     'auth/too-many-requests':    'Muitas tentativas. Aguarde alguns minutos.',
@@ -371,8 +834,7 @@ function traduzErro(code) {
   return mapa[code] || 'Ocorreu um erro. Tente novamente.';
 }
 
-// ── SERVICE WORKER ───────────────────────────────
-
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
