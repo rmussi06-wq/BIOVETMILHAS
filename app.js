@@ -152,7 +152,13 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     if (window.showLoadingOverlay) window.showLoadingOverlay();
     try {
-      const snap = await getDoc(doc(db, 'users', user.uid));
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 10000)
+      );
+      const snap = await Promise.race([
+        getDoc(doc(db, 'users', user.uid)),
+        timeoutPromise
+      ]);
 
       if (!snap.exists()) {
         await signOut(auth);
@@ -161,11 +167,12 @@ onAuthStateChanged(auth, async (user) => {
       }
 
       const data = snap.data();
+      const role  = (data.role || '').trim();
 
-      if (data.role === 'admin') {
+      if (role === 'admin') {
         await carregarAdmin();
         mostrarAdminView();
-      } else if (data.role === 'dashboard') {
+      } else if (role === 'dashboard') {
         await carregarDashboard();
         mostrarDashboardView();
       } else if (data.approved === true) {
@@ -183,7 +190,10 @@ onAuthStateChanged(auth, async (user) => {
     } catch (err) {
       console.error(err);
       await signOut(auth);
-      mostrarAuthView({ form: 'login-form', elId: 'login-error', mensagem: 'Erro ao validar cadastro. Tente novamente.', tipo: 'error' });
+      const msg = err.message === 'timeout'
+        ? 'Conexão lenta. Verifique sua internet e tente novamente.'
+        : 'Erro ao validar cadastro. Tente novamente.';
+      mostrarAuthView({ form: 'login-form', elId: 'login-error', mensagem: msg, tipo: 'error' });
     }
   } else {
     mostrarAuthView();
@@ -195,7 +205,7 @@ loginForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   limparMensagem(loginError);
 
-  const email    = loginEmailInput.value.trim();
+  const email    = loginEmailInput.value.trim().toLowerCase();
   const password = loginPasswordInput.value;
 
   if (!email || !password) {
@@ -224,7 +234,7 @@ registerForm?.addEventListener('submit', async (e) => {
   const cpf            = registerCpfInput.value.trim();
   const dataNascimento = registerDobInput.value;
   const crmv           = registerCrmvInput.value.trim();
-  const email          = registerEmailInput.value.trim();
+  const email          = registerEmailInput.value.trim().toLowerCase();
   const senha          = registerPasswordInput.value;
   const senhaConf      = registerPasswordConfirmInput.value;
 
@@ -453,7 +463,7 @@ function renderAdminUsers(filtro) {
     : adminAllUsers;
 
   // Exclui admins e dashboards da lista
-  const parceiros = lista.filter(u => !u.role || u.role === 'vet');
+  const parceiros = lista.filter(u => { const r = (u.role || '').trim(); return !r || r === 'vet'; });
 
   if (parceiros.length === 0) {
     el.innerHTML = '<p class="empty-state">Nenhum parceiro encontrado.</p>';
@@ -612,10 +622,11 @@ async function executarBuscaDash(termo) {
 
     const encontrados = snap.docs
       .map(d => ({ uid: d.id, ...d.data() }))
-      .filter(u =>
-        (!u.role || u.role === 'vet') &&
-        (u.nome?.toLowerCase().includes(termoLower) || u.crmv?.toLowerCase().includes(termoLower))
-      );
+      .filter(u => {
+        const r = (u.role || '').trim();
+        return (!r || r === 'vet') &&
+          (u.nome?.toLowerCase().includes(termoLower) || u.crmv?.toLowerCase().includes(termoLower));
+      });
 
     if (encontrados.length === 0) {
       resultEl.innerHTML = '<p class="empty-state">Nenhum parceiro encontrado.</p>';
@@ -835,10 +846,43 @@ function traduzErro(code) {
 }
 
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
+function mostrarToastAtualizacao(onConfirm) {
+  let toast = document.getElementById('sw-update-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'sw-update-toast';
+    toast.innerHTML = `
+      <span>Nova versão disponível.</span>
+      <button id="sw-update-btn">Atualizar</button>
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.classList.add('sw-toast--visible');
+  document.getElementById('sw-update-btn').onclick = () => {
+    toast.classList.remove('sw-toast--visible');
+    onConfirm();
+  };
+}
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('service-worker.js')
-      .catch(err => console.error('SW:', err));
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+      setInterval(() => reg.update(), 30 * 60 * 1000);
+
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            mostrarToastAtualizacao(() => {
+              newSW.postMessage({ type: 'SKIP_WAITING' });
+            });
+          }
+        });
+      });
+    }).catch(err => console.error('SW:', err));
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   });
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'biovet-v7';
+const CACHE_NAME = 'biovet-v8';
 
 const STATIC_ASSETS = [
   '/',
@@ -24,7 +24,6 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Cache-first para assets estáticos, network-first para Firebase/APIs
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
@@ -37,6 +36,20 @@ self.addEventListener('fetch', e => {
     url.hostname.includes('wa.me')
   ) {
     e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // HTML: network-first — garante que o usuário sempre receba versão atual
+  if (e.request.mode === 'navigate' || e.request.destination === 'document') {
+    e.respondWith(
+      fetch(e.request)
+        .then(resp => {
+          const clone = resp.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+          return resp;
+        })
+        .catch(() => caches.match(e.request).then(r => r || caches.match('/index.html')))
+    );
     return;
   }
 
@@ -53,4 +66,9 @@ self.addEventListener('fetch', e => {
       }).catch(() => caches.match('/index.html'));
     })
   );
+});
+
+// Recebe sinal do app.js para ativar novo SW sem reabrir o browser
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });

@@ -1119,6 +1119,46 @@ input:focus {
 }
 
 /* ════════════════════════════════
+   TOAST DE ATUALIZAÇÃO SW
+   ════════════════════════════════ */
+#sw-update-toast {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  z-index: 300;
+  background: var(--teal-deep);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: var(--r-pill);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+}
+#sw-update-toast.sw-toast--visible {
+  transform: translateX(-50%) translateY(0);
+}
+#sw-update-btn {
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 900;
+  background: #fff;
+  color: var(--teal-deep);
+  border: none;
+  border-radius: var(--r-pill);
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: filter 0.12s;
+}
+#sw-update-btn:hover { filter: brightness(0.95); }
+
+/* ════════════════════════════════
    ANIMAÇÕES
    ════════════════════════════════ */
 @keyframes fadeUp {
@@ -1137,6 +1177,17 @@ input:focus {
 /* ════════════════════════════════
    RESPONSIVO
    ════════════════════════════════ */
+
+/* Safe areas iOS (notch / home indicator) */
+.btn-whatsapp {
+  margin-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+/* Evita zoom automático do iOS em inputs com font-size < 16px */
+input, select, textarea {
+  font-size: max(16px, 1rem);
+}
+
 @media (max-width: 380px) {
   .welcome-title  { font-size: 1.75rem; }
   .pontos-value   { font-size: 2.8rem; }
@@ -1147,4 +1198,27 @@ input:focus {
 @media (min-width: 500px) {
   .welcome-panel { gap: 80px; }
   .pontos-card   { border-radius: 28px; }
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+  .home-shell,
+  .admin-shell,
+  .dashboard-shell {
+    max-width: 720px;
+  }
+  .welcome-panel,
+  .forms-panel {
+    max-width: 480px;
+  }
+  .pontos-value { font-size: 4rem; }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .home-shell,
+  .admin-shell,
+  .dashboard-shell {
+    max-width: 960px;
+  }
 }
