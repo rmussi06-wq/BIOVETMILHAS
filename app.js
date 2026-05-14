@@ -21,7 +21,8 @@ import {
   orderBy,
   where,
   runTransaction,
-  serverTimestamp
+  serverTimestamp,
+  onSnapshot
 } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
 import {
   getStorage,
@@ -443,6 +444,11 @@ async function carregarAdmin() {
   // Tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      // Cancela listeners de resgates ao sair da aba
+      if (btn.dataset.tab !== 'tab-resgates') {
+        if (_unsubPendentes) { _unsubPendentes(); _unsubPendentes = null; }
+        if (_unsubHistorico) { _unsubHistorico(); _unsubHistorico = null; }
+      }
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
       btn.classList.add('tab-btn--active');
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
@@ -588,34 +594,52 @@ async function salvarCotacao() {
 }
 
 // ── ADMIN RESGATES ────────────────────────────────────────────────────────────
-let _resgateAtual = null; // resgate sendo finalizado
+let _resgateAtual           = null; // resgate sendo finalizado
+let _unsubPendentes         = null; // listener onSnapshot pendentes
+let _unsubHistorico         = null; // listener onSnapshot historico
 
-async function carregarResgatesPendentes() {
+function carregarResgatesPendentes() {
   const el = document.getElementById('admin-resgates-pendentes');
   if (!el) return;
   el.innerHTML = '<p class="empty-state">Carregando...</p>';
-  try {
-    const q    = query(collection(db, 'resgates'), where('status', '==', 'pendente'), orderBy('criadoEm', 'desc'));
-    const snap = await getDocs(q);
-    renderResgateCards(el, snap.docs, true);
-  } catch (err) {
-    console.error(err);
-    el.innerHTML = '<p class="empty-state">Erro ao carregar resgates.</p>';
-  }
+
+  // Cancela listener anterior se existir
+  if (_unsubPendentes) { _unsubPendentes(); _unsubPendentes = null; }
+
+  // Campo correto é solicitadoEm (não criadoEm)
+  const q = query(
+    collection(db, 'resgates'),
+    where('status', '==', 'pendente'),
+    orderBy('solicitadoEm', 'desc')
+  );
+  _unsubPendentes = onSnapshot(q,
+    snap => renderResgateCards(el, snap.docs, true),
+    err  => {
+      console.error('resgates pendentes:', err);
+      el.innerHTML = '<p class="empty-state">Erro ao carregar resgates. Verifique as Security Rules.</p>';
+    }
+  );
 }
 
-async function carregarResgatesHistorico() {
+function carregarResgatesHistorico() {
   const el = document.getElementById('admin-resgates-historico');
   if (!el) return;
   el.innerHTML = '<p class="empty-state">Carregando...</p>';
-  try {
-    const q    = query(collection(db, 'resgates'), where('status', '==', 'finalizado'), orderBy('criadoEm', 'desc'));
-    const snap = await getDocs(q);
-    renderResgateCards(el, snap.docs, false);
-  } catch (err) {
-    console.error(err);
-    el.innerHTML = '<p class="empty-state">Erro ao carregar histórico.</p>';
-  }
+
+  if (_unsubHistorico) { _unsubHistorico(); _unsubHistorico = null; }
+
+  const q = query(
+    collection(db, 'resgates'),
+    where('status', '==', 'finalizado'),
+    orderBy('solicitadoEm', 'desc')
+  );
+  _unsubHistorico = onSnapshot(q,
+    snap => renderResgateCards(el, snap.docs, false),
+    err  => {
+      console.error('resgates historico:', err);
+      el.innerHTML = '<p class="empty-state">Erro ao carregar histórico.</p>';
+    }
+  );
 }
 
 function renderResgateCards(container, docs, comAcao) {
@@ -624,41 +648,60 @@ function renderResgateCards(container, docs, comAcao) {
     return;
   }
   container.innerHTML = docs.map(d => {
-    const r   = d.data();
-    const rid = d.id;
+    const r      = d.data();
+    const rid    = d.id;
     const status = r.status === 'finalizado' ? 'finalizado' : 'pendente';
+    const valor  = r.valorReais
+      ? 'R$ ' + r.valorReais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+      : '—';
+    const solicitante = r.solicitadoPor?.nome || '—';
     return `
       <div class="resgate-card resgate-card--${status}">
         <div class="resgate-card-header">
           <span class="resgate-card-vet">${esc(r.vetNome || '—')}</span>
-          <span class="resgate-card-data">${formatarDataHora(r.criadoEm)}</span>
+          <span class="resgate-card-data">${formatarDataHora(r.solicitadoEm)}</span>
         </div>
         <div class="resgate-card-info">
           <span>CRMV: ${esc(r.vetCrmv || '—')}</span>
           <span>CPF: ${mascararCpf(r.vetCpf)}</span>
-          <span class="resgate-card-estab">Estabelecimento: ${esc(r.estabelecimento || '—')}</span>
-          <span class="resgate-card-pontos">${(r.pontosResgatados || 0).toLocaleString('pt-BR')} pts</span>
+          <span>ID do Agente: ${esc(r.estabelecimento || '—')}</span>
+          <span>Por: ${esc(solicitante)}</span>
         </div>
         <div class="resgate-card-info">
-          <span>Protocolo: ${esc(r.protocolo || rid.slice(0, 8).toUpperCase())}</span>
+          <span class="resgate-card-pontos">${(r.pontosResgatados || 0).toLocaleString('pt-BR')} pts · ${valor}</span>
           <span><span class="badge-status badge-status--${status}">${status}</span></span>
         </div>
         ${comAcao ? `
         <div class="resgate-card-actions">
-          <button class="btn btn-primary" onclick="abrirModalFinalizarResgate('${rid}')">Finalizar</button>
-        </div>` : ''}
+          <button class="btn btn-primary" onclick="abrirModalFinalizarResgate('${rid}')">
+            Anexar e Finalizar
+          </button>
+        </div>` : (r.comprovanteUrl ? `
+        <div class="resgate-card-actions">
+          <a href="${esc(r.comprovanteUrl)}" target="_blank" class="btn btn-outline" style="font-size:0.85rem">
+            Ver comprovante
+          </a>
+        </div>` : '')}
       </div>`;
   }).join('');
 }
 
 window.abrirModalFinalizarResgate = function(resgateId) {
-  const docs = document.querySelectorAll('.resgate-card');
-  // busca o resgate nos dados já renderizados via atributo
   _resgateAtual = { id: resgateId };
-  const msgEl = document.getElementById('finalizar-resgate-msg');
-  limparMensagem(msgEl);
-  document.getElementById('finalizar-comprovante-input').value = '';
-  document.getElementById('finalizar-resgate-label').textContent = `Resgate ID: ${resgateId.slice(0, 8).toUpperCase()}`;
+  limparMensagem(document.getElementById('finalizar-resgate-msg'));
+
+  const fileInput = document.getElementById('finalizar-comprovante-input');
+  const btnFinalizar = document.getElementById('btn-finalizar-confirmar');
+  fileInput.value = '';
+  btnFinalizar.disabled = true;
+
+  // Habilita o botão apenas após selecionar arquivo
+  fileInput.onchange = () => {
+    btnFinalizar.disabled = !fileInput.files?.length;
+  };
+
+  document.getElementById('finalizar-resgate-label').textContent =
+    `Protocolo: ${resgateId.slice(0, 8).toUpperCase()}`;
   document.getElementById('modal-finalizar-resgate').classList.remove('hidden');
 };
 
