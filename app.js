@@ -1054,17 +1054,20 @@ window.confirmarResgate = async function() {
       finalizadoPor:    null,
     });
 
+    // Salva dados antes de fecharModalResgate() — que zera resgateAtual
+    const { vetNome, vetCrmv, vetCpf } = resgateAtual;
+    const cotacaoSnapshot = { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais };
     fecharModalResgate();
     abrirComprovante({
-      protocolo:        docRef.id,
-      vetNome:          resgateAtual.vetNome,
-      vetCrmv:          resgateAtual.vetCrmv,
-      vetCpf:           resgateAtual.vetCpf,
-      estabelecimento:  agente,
+      protocolo:    docRef.id,
+      vetNome,
+      vetCrmv,
+      vetCpf,
+      estabelecimento: agente,
       pontosResgatados,
       valorReais,
-      cotacaoSnapshot:  { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais },
-      solicitadoEm:     new Date(),
+      cotacaoSnapshot,
+      solicitadoEm: new Date(),
     });
   } catch (err) {
     console.error(err);
