@@ -839,30 +839,23 @@ async function carregarSlotsCarrosel() {
   [0, 1, 2].forEach(i => {
     const slotKey = `slot${i}`;
     const url     = carouselData[slotKey] || '';
+    const temImg  = !!url;
 
     const slot = document.createElement('div');
-    slot.className = 'carousel-slot';
+    slot.className = 'carousel-slot carousel-slot--compact';
     slot.innerHTML = `
-      ${url
-        ? `<img src="${url}" class="carousel-slot-preview" alt="Imagem ${i + 1}">`
-        : `<div class="carousel-slot-empty">
-             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-               <rect x="3" y="3" width="18" height="18" rx="3"/>
-               <circle cx="8.5" cy="8.5" r="1.5"/>
-               <polyline points="21 15 16 10 5 21"/>
-             </svg>
-             <span>Sem imagem</span>
-           </div>`
-      }
-      <div class="carousel-slot-footer">
+      <div class="carousel-slot-status">
+        <span class="badge-status ${temImg ? 'badge-status--finalizado' : 'badge-status--pendente'}">
+          ${temImg ? 'Ativa' : 'Vazia'}
+        </span>
         <span class="carousel-slot-label">Imagem ${i + 1}</span>
-        <div class="carousel-slot-actions">
-          <label class="btn-sm btn-sm--teal" style="cursor:pointer">
-            Upload
-            <input type="file" accept="image/*" style="display:none" data-slot="${i}" class="slot-file-input">
-          </label>
-          ${url ? `<button class="btn-sm btn-sm--red" data-slot="${i}" onclick="removerImagemSlot(${i})">Remover</button>` : ''}
-        </div>
+      </div>
+      <div class="carousel-slot-actions">
+        <label class="btn-sm btn-sm--teal" style="cursor:pointer">
+          ${temImg ? 'Substituir' : 'Upload'}
+          <input type="file" accept="image/*" style="display:none" data-slot="${i}" class="slot-file-input">
+        </label>
+        ${temImg ? `<button class="btn-sm btn-sm--red" onclick="removerImagemSlot(${i})">Remover</button>` : ''}
       </div>
     `;
     container.appendChild(slot);
@@ -873,7 +866,7 @@ async function carregarSlotsCarrosel() {
       const file = e.target.files[0];
       if (!file) return;
       if (file.size > 2 * 1024 * 1024) {
-        alert('Imagem muito grande. Máximo 2 MB.');
+        mostrarMensagem(document.getElementById('cotacao-msg'), 'Imagem muito grande. Máximo 2 MB.', 'error');
         return;
       }
       const slotIdx = parseInt(input.dataset.slot, 10);
@@ -888,53 +881,33 @@ async function uploadImagemSlot(slotIdx, file) {
   const slot      = slots?.[slotIdx];
   if (!slot) return;
 
-  const uploadLabel = slot.querySelector('label.btn-sm');
-  if (uploadLabel) { uploadLabel.textContent = 'Enviando…'; uploadLabel.style.opacity = '0.6'; }
+  const label = slot.querySelector('label.btn-sm');
+  if (label) { label.textContent = 'Enviando…'; label.style.opacity = '0.6'; }
 
   try {
-    const base64 = await redimensionarImagem(file);
-    const slotKey = `slot${slotIdx}`;
-    await setDoc(doc(db, 'config', 'carousel'), { [slotKey]: base64 }, { merge: true });
+    const ref  = storageRef(storage, `carousel/slot${slotIdx}.jpg`);
+    await uploadBytes(ref, file);
+    const url  = await getDownloadURL(ref);
+    await setDoc(doc(db, 'config', 'carousel'), { [`slot${slotIdx}`]: url }, { merge: true });
     await carregarSlotsCarrosel();
   } catch (err) {
     console.error(err);
-    alert('Erro ao fazer upload. Tente novamente.');
-    if (uploadLabel) { uploadLabel.textContent = 'Upload'; uploadLabel.style.opacity = '1'; }
+    mostrarMensagem(document.getElementById('cotacao-msg'), 'Erro ao fazer upload. Tente novamente.', 'error');
+    if (label) { label.textContent = 'Upload'; label.style.opacity = '1'; }
   }
 }
 
 window.removerImagemSlot = async function(slotIdx) {
-  if (!confirm(`Remover imagem ${slotIdx + 1}?`)) return;
   try {
+    const ref = storageRef(storage, `carousel/slot${slotIdx}.jpg`);
+    await deleteObject(ref).catch(() => {}); // ignora se não existir no Storage
     await setDoc(doc(db, 'config', 'carousel'), { [`slot${slotIdx}`]: '' }, { merge: true });
     await carregarSlotsCarrosel();
   } catch (err) {
     console.error(err);
-    alert('Erro ao remover. Tente novamente.');
+    mostrarMensagem(document.getElementById('cotacao-msg'), 'Erro ao remover. Tente novamente.', 'error');
   }
 };
-
-function redimensionarImagem(file, maxWidth = 1200, quality = 0.82) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const ratio  = Math.min(maxWidth / img.width, 1);
-        const canvas = document.createElement('canvas');
-        canvas.width  = Math.round(img.width * ratio);
-        canvas.height = Math.round(img.height * ratio);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = e.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 // ── COMPROVANTE DE RESGATE ────────────────────────────────────────────────────
 function abrirComprovante(dados) {

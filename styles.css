@@ -1131,6 +1131,20 @@ input:focus {
   gap: 8px;
 }
 
+.carousel-slot--compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-style: solid;
+}
+
+.carousel-slot-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* ════════════════════════════════
    COMPROVANTE DE RESGATE
    ════════════════════════════════ */
