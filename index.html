@@ -284,6 +284,36 @@
     </div>
   </section>
 
+  <!-- MODAL DE RESGATE (Dashboard) -->
+  <div id="modal-resgate" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 class="modal-title">Trocar pontos</h3>
+      <p id="resgate-vet-label" class="modal-subtitle"></p>
+      <div class="input-group">
+        <label for="resgate-estabelecimento">Nome do estabelecimento</label>
+        <input id="resgate-estabelecimento" type="text" placeholder="Clínica Veterinária…"
+          oninput="atualizarValorResgate()" />
+      </div>
+      <div class="input-group">
+        <label for="resgate-pontos-input">Pontos a resgatar
+          <span style="font-weight:600;text-transform:none">(máx: <span id="resgate-pontos-max">0</span>)</span>
+        </label>
+        <input id="resgate-pontos-input" type="number" min="1" placeholder="0"
+          oninput="atualizarValorResgate()" />
+      </div>
+      <div class="resgate-valor-linha">
+        <span class="resgate-valor-label">Valor equivalente:</span>
+        <span id="resgate-valor-calc" class="resgate-valor-num">—</span>
+      </div>
+      <p id="resgate-msg" class="form-msg"></p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="fecharModalResgate()">Cancelar</button>
+        <button id="btn-resgate-confirmar" class="btn btn-primary" disabled
+          onclick="confirmarResgate()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- DASHBOARD VIEW -->
   <section id="dashboard-view" class="view">
     <div class="dashboard-shell">

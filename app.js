@@ -659,6 +659,10 @@ async function executarBuscaDash(termo) {
             <span class="dash-points-label">pontos</span>
           </div>
           ${equiv ? `<div class="dash-cotacao-equiv">≈ R$ ${equiv}</div>` : ''}
+          <button class="btn btn-primary btn-block" style="margin-top:8px"
+            onclick="abrirModalResgate('${esc(u.uid)}','${esc(u.nome || '')}','${esc(u.crmv || '')}','${esc(u.cpf || '')}',${pontos})">
+            Trocar pontos
+          </button>
         </div>
       `;
     }).join('');
@@ -787,6 +791,118 @@ function redimensionarImagem(file, maxWidth = 1200, quality = 0.82) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// ── MODAL DE RESGATE (Dashboard) ──────────────────────────────────────────────
+let resgateAtual = null; // { vetUid, vetNome, vetCrmv, vetCpf, pontosDisponiveis }
+
+window.abrirModalResgate = function(vetUid, vetNome, vetCrmv, vetCpf, pontosDisponiveis) {
+  resgateAtual = { vetUid, vetNome, vetCrmv, vetCpf, pontosDisponiveis };
+
+  document.getElementById('resgate-vet-label').textContent =
+    `${vetNome || '—'} · CRMV: ${vetCrmv || '—'}`;
+  document.getElementById('resgate-pontos-max').textContent =
+    pontosDisponiveis.toLocaleString('pt-BR');
+
+  const inputPontos = document.getElementById('resgate-pontos-input');
+  inputPontos.value = '';
+  inputPontos.max   = pontosDisponiveis;
+
+  document.getElementById('resgate-estabelecimento').value = '';
+  document.getElementById('resgate-valor-calc').textContent = '—';
+  document.getElementById('btn-resgate-confirmar').disabled = true;
+  limparMensagem(document.getElementById('resgate-msg'));
+
+  document.getElementById('modal-resgate').classList.remove('hidden');
+};
+
+function fecharModalResgate() {
+  document.getElementById('modal-resgate').classList.add('hidden');
+  resgateAtual = null;
+}
+
+function atualizarValorResgate() {
+  const inputPontos = document.getElementById('resgate-pontos-input');
+  const pts = parseInt(inputPontos.value, 10) || 0;
+  const max = resgateAtual?.pontosDisponiveis ?? 0;
+  const estabelecimento = document.getElementById('resgate-estabelecimento').value.trim();
+
+  const valido = pts > 0 && pts <= max && !!estabelecimento;
+  document.getElementById('btn-resgate-confirmar').disabled = !valido;
+
+  if (pts > 0 && dashCotacao.pontosBase) {
+    const valor = (pts / dashCotacao.pontosBase) * dashCotacao.valorReais;
+    document.getElementById('resgate-valor-calc').textContent =
+      'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  } else {
+    document.getElementById('resgate-valor-calc').textContent = '—';
+  }
+}
+
+async function confirmarResgate() {
+  if (!resgateAtual) return;
+
+  const pontosResgatados = parseInt(document.getElementById('resgate-pontos-input').value, 10);
+  const estabelecimento  = document.getElementById('resgate-estabelecimento').value.trim();
+  const msgEl            = document.getElementById('resgate-msg');
+
+  if (!estabelecimento) {
+    mostrarMensagem(msgEl, 'Informe o nome do estabelecimento.', 'error');
+    return;
+  }
+  if (!pontosResgatados || pontosResgatados <= 0) {
+    mostrarMensagem(msgEl, 'Informe os pontos a resgatar.', 'error');
+    return;
+  }
+  if (pontosResgatados > resgateAtual.pontosDisponiveis) {
+    mostrarMensagem(msgEl, 'Pontos insuficientes.', 'error');
+    return;
+  }
+
+  const valorReais = (pontosResgatados / dashCotacao.pontosBase) * dashCotacao.valorReais;
+  const btn = document.getElementById('btn-resgate-confirmar');
+  iniciarLoading(btn);
+
+  try {
+    const currentUser = auth.currentUser;
+    const userSnap    = await getDoc(doc(db, 'users', currentUser.uid));
+    const dashNome    = userSnap.exists() ? (userSnap.data().nome || currentUser.email) : currentUser.email;
+
+    const docRef = await addDoc(collection(db, 'resgates'), {
+      vetUid:           resgateAtual.vetUid,
+      vetNome:          resgateAtual.vetNome,
+      vetCrmv:          resgateAtual.vetCrmv,
+      vetCpf:           resgateAtual.vetCpf,
+      estabelecimento,
+      pontosResgatados,
+      valorReais,
+      cotacaoSnapshot:  { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais },
+      status:           'pendente',
+      solicitadoPor:    { uid: currentUser.uid, nome: dashNome },
+      solicitadoEm:     serverTimestamp(),
+      comprovanteUrl:   null,
+      finalizadoEm:     null,
+      finalizadoPor:    null,
+    });
+
+    fecharModalResgate();
+    abrirComprovante({
+      protocolo:        docRef.id,
+      vetNome:          resgateAtual.vetNome,
+      vetCrmv:          resgateAtual.vetCrmv,
+      vetCpf:           resgateAtual.vetCpf,
+      estabelecimento,
+      pontosResgatados,
+      valorReais,
+      cotacaoSnapshot:  { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais },
+      solicitadoEm:     new Date(),
+    });
+  } catch (err) {
+    console.error(err);
+    mostrarMensagem(msgEl, 'Erro ao registrar resgate. Tente novamente.', 'error');
+  } finally {
+    pararLoading(btn);
+  }
 }
 
 // ── UTILITÁRIOS DE UI ─────────────────────────────────────────────────────────
