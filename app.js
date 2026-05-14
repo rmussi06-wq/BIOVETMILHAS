@@ -667,6 +667,64 @@ window.fecharModalFinalizarResgate = function() {
   _resgateAtual = null;
 };
 
+window.confirmarFinalizarResgate = async function() {
+  if (!_resgateAtual) return;
+  const rid    = _resgateAtual.id;
+  const fileEl = document.getElementById('finalizar-comprovante-input');
+  const msgEl  = document.getElementById('finalizar-resgate-msg');
+  const btn    = document.getElementById('btn-finalizar-confirmar');
+  limparMensagem(msgEl);
+
+  iniciarLoading(btn);
+  try {
+    // 1. Busca o resgate para obter vetUid e pontosResgatados
+    const resgateSnap = await getDoc(doc(db, 'resgates', rid));
+    if (!resgateSnap.exists()) throw new Error('Resgate não encontrado.');
+    const resgate = resgateSnap.data();
+    if (resgate.status !== 'pendente') {
+      mostrarMensagem(msgEl, 'Este resgate já foi finalizado.', 'error');
+      return;
+    }
+
+    // 2. Upload do comprovante (se fornecido)
+    let comprovanteUrl = null;
+    const file = fileEl?.files?.[0];
+    if (file) {
+      const ref  = storageRef(storage, `comprovantes/${rid}`);
+      await uploadBytes(ref, file);
+      comprovanteUrl = await getDownloadURL(ref);
+    }
+
+    // 3. Transação: debita pontos do vet e marca resgate como finalizado
+    const userRef    = doc(db, 'users', resgate.vetUid);
+    const resgateRef = doc(db, 'resgates', rid);
+    await runTransaction(db, async (tx) => {
+      const userSnap = await tx.get(userRef);
+      if (!userSnap.exists()) throw new Error('Usuário não encontrado.');
+      const pontosAtuais = userSnap.data().pontos || 0;
+      if (pontosAtuais < resgate.pontosResgatados) throw new Error('Saldo insuficiente.');
+      tx.update(userRef,    { pontos: pontosAtuais - resgate.pontosResgatados });
+      tx.update(resgateRef, {
+        status: 'finalizado',
+        finalizadoEm: serverTimestamp(),
+        ...(comprovanteUrl ? { comprovanteUrl } : {})
+      });
+    });
+
+    mostrarMensagem(msgEl, 'Resgate finalizado com sucesso!', 'success');
+    setTimeout(() => {
+      fecharModalFinalizarResgate();
+      carregarResgatesPendentes();
+      carregarResgatesHistorico();
+    }, 1200);
+  } catch (err) {
+    console.error(err);
+    mostrarMensagem(msgEl, err.message || 'Erro ao finalizar resgate.', 'error');
+  } finally {
+    pararLoading(btn);
+  }
+};
+
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function carregarDashboard() {
   // Cotação
