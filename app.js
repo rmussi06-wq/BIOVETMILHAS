@@ -15,10 +15,21 @@ import {
   getDoc,
   getDocs,
   updateDoc,
+  addDoc,
   collection,
   query,
-  orderBy
+  orderBy,
+  where,
+  runTransaction,
+  serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js';
 
 // ── CONFIG ───────────────────────────────────────────────────────────────────
 const firebaseConfig = {
@@ -42,9 +53,10 @@ const NOTIFICATION_EMAIL  = '';   // e-mail que receberá os avisos
 const WHATSAPP_NUMBER = '5514997132879';
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
-const fbApp = initializeApp(firebaseConfig);
-const auth  = getAuth(fbApp);
-const db    = getFirestore(fbApp);
+const fbApp   = initializeApp(firebaseConfig);
+const auth    = getAuth(fbApp);
+const db      = getFirestore(fbApp);
+const storage = getStorage(fbApp);
 
 // ── ESTADO ───────────────────────────────────────────────────────────────────
 let isRegistering      = false;
@@ -92,7 +104,8 @@ const cardUserCrmvEl = document.getElementById('card-user-crmv');
 
 // ── VIEWS ─────────────────────────────────────────────────────────────────────
 function ocultarTodasViews() {
-  [authView, homeView, adminView, dashboardView].forEach(v => v.classList.remove('active'));
+  [authView, homeView, adminView, dashboardView,
+   document.getElementById('print-comprovante-view')].forEach(v => v?.classList.remove('active'));
 }
 
 function mostrarAuthView(opcoes) {
@@ -152,7 +165,13 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     if (window.showLoadingOverlay) window.showLoadingOverlay();
     try {
-      const snap = await getDoc(doc(db, 'users', user.uid));
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 10000)
+      );
+      const snap = await Promise.race([
+        getDoc(doc(db, 'users', user.uid)),
+        timeoutPromise
+      ]);
 
       if (!snap.exists()) {
         await signOut(auth);
@@ -161,11 +180,12 @@ onAuthStateChanged(auth, async (user) => {
       }
 
       const data = snap.data();
+      const role  = (data.role || '').trim();
 
-      if (data.role === 'admin') {
+      if (role === 'admin') {
         await carregarAdmin();
         mostrarAdminView();
-      } else if (data.role === 'dashboard') {
+      } else if (role === 'dashboard') {
         await carregarDashboard();
         mostrarDashboardView();
       } else if (data.approved === true) {
@@ -183,7 +203,10 @@ onAuthStateChanged(auth, async (user) => {
     } catch (err) {
       console.error(err);
       await signOut(auth);
-      mostrarAuthView({ form: 'login-form', elId: 'login-error', mensagem: 'Erro ao validar cadastro. Tente novamente.', tipo: 'error' });
+      const msg = err.message === 'timeout'
+        ? 'Conexão lenta. Verifique sua internet e tente novamente.'
+        : 'Erro ao validar cadastro. Tente novamente.';
+      mostrarAuthView({ form: 'login-form', elId: 'login-error', mensagem: msg, tipo: 'error' });
     }
   } else {
     mostrarAuthView();
@@ -195,7 +218,7 @@ loginForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   limparMensagem(loginError);
 
-  const email    = loginEmailInput.value.trim();
+  const email    = loginEmailInput.value.trim().toLowerCase();
   const password = loginPasswordInput.value;
 
   if (!email || !password) {
@@ -224,7 +247,7 @@ registerForm?.addEventListener('submit', async (e) => {
   const cpf            = registerCpfInput.value.trim();
   const dataNascimento = registerDobInput.value;
   const crmv           = registerCrmvInput.value.trim();
-  const email          = registerEmailInput.value.trim();
+  const email          = registerEmailInput.value.trim().toLowerCase();
   const senha          = registerPasswordInput.value;
   const senhaConf      = registerPasswordConfirmInput.value;
 
@@ -424,6 +447,10 @@ async function carregarAdmin() {
       btn.classList.add('tab-btn--active');
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
       document.getElementById(btn.dataset.tab)?.classList.remove('hidden');
+      if (btn.dataset.tab === 'tab-resgates') {
+        carregarResgatesPendentes();
+        carregarResgatesHistorico();
+      }
     });
   });
 
@@ -453,7 +480,7 @@ function renderAdminUsers(filtro) {
     : adminAllUsers;
 
   // Exclui admins e dashboards da lista
-  const parceiros = lista.filter(u => !u.role || u.role === 'vet');
+  const parceiros = lista.filter(u => { const r = (u.role || '').trim(); return !r || r === 'vet'; });
 
   if (parceiros.length === 0) {
     el.innerHTML = '<p class="empty-state">Nenhum parceiro encontrado.</p>';
@@ -560,6 +587,144 @@ async function salvarCotacao() {
   }
 }
 
+// ── ADMIN RESGATES ────────────────────────────────────────────────────────────
+let _resgateAtual = null; // resgate sendo finalizado
+
+async function carregarResgatesPendentes() {
+  const el = document.getElementById('admin-resgates-pendentes');
+  if (!el) return;
+  el.innerHTML = '<p class="empty-state">Carregando...</p>';
+  try {
+    const q    = query(collection(db, 'resgates'), where('status', '==', 'pendente'), orderBy('criadoEm', 'desc'));
+    const snap = await getDocs(q);
+    renderResgateCards(el, snap.docs, true);
+  } catch (err) {
+    console.error(err);
+    el.innerHTML = '<p class="empty-state">Erro ao carregar resgates.</p>';
+  }
+}
+
+async function carregarResgatesHistorico() {
+  const el = document.getElementById('admin-resgates-historico');
+  if (!el) return;
+  el.innerHTML = '<p class="empty-state">Carregando...</p>';
+  try {
+    const q    = query(collection(db, 'resgates'), where('status', '==', 'finalizado'), orderBy('criadoEm', 'desc'));
+    const snap = await getDocs(q);
+    renderResgateCards(el, snap.docs, false);
+  } catch (err) {
+    console.error(err);
+    el.innerHTML = '<p class="empty-state">Erro ao carregar histórico.</p>';
+  }
+}
+
+function renderResgateCards(container, docs, comAcao) {
+  if (docs.length === 0) {
+    container.innerHTML = '<p class="empty-state">Nenhum registro encontrado.</p>';
+    return;
+  }
+  container.innerHTML = docs.map(d => {
+    const r   = d.data();
+    const rid = d.id;
+    const status = r.status === 'finalizado' ? 'finalizado' : 'pendente';
+    return `
+      <div class="resgate-card resgate-card--${status}">
+        <div class="resgate-card-header">
+          <span class="resgate-card-vet">${esc(r.vetNome || '—')}</span>
+          <span class="resgate-card-data">${formatarDataHora(r.criadoEm)}</span>
+        </div>
+        <div class="resgate-card-info">
+          <span>CRMV: ${esc(r.vetCrmv || '—')}</span>
+          <span>CPF: ${mascararCpf(r.vetCpf)}</span>
+          <span class="resgate-card-estab">Estabelecimento: ${esc(r.estabelecimento || '—')}</span>
+          <span class="resgate-card-pontos">${(r.pontosResgatados || 0).toLocaleString('pt-BR')} pts</span>
+        </div>
+        <div class="resgate-card-info">
+          <span>Protocolo: ${esc(r.protocolo || rid.slice(0, 8).toUpperCase())}</span>
+          <span><span class="badge-status badge-status--${status}">${status}</span></span>
+        </div>
+        ${comAcao ? `
+        <div class="resgate-card-actions">
+          <button class="btn btn-primary" onclick="abrirModalFinalizarResgate('${rid}')">Finalizar</button>
+        </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+window.abrirModalFinalizarResgate = function(resgateId) {
+  const docs = document.querySelectorAll('.resgate-card');
+  // busca o resgate nos dados já renderizados via atributo
+  _resgateAtual = { id: resgateId };
+  const msgEl = document.getElementById('finalizar-resgate-msg');
+  limparMensagem(msgEl);
+  document.getElementById('finalizar-comprovante-input').value = '';
+  document.getElementById('finalizar-resgate-label').textContent = `Resgate ID: ${resgateId.slice(0, 8).toUpperCase()}`;
+  document.getElementById('modal-finalizar-resgate').classList.remove('hidden');
+};
+
+window.fecharModalFinalizarResgate = function() {
+  document.getElementById('modal-finalizar-resgate').classList.add('hidden');
+  _resgateAtual = null;
+};
+
+window.confirmarFinalizarResgate = async function() {
+  if (!_resgateAtual) return;
+  const rid    = _resgateAtual.id;
+  const fileEl = document.getElementById('finalizar-comprovante-input');
+  const msgEl  = document.getElementById('finalizar-resgate-msg');
+  const btn    = document.getElementById('btn-finalizar-confirmar');
+  limparMensagem(msgEl);
+
+  iniciarLoading(btn);
+  try {
+    // 1. Busca o resgate para obter vetUid e pontosResgatados
+    const resgateSnap = await getDoc(doc(db, 'resgates', rid));
+    if (!resgateSnap.exists()) throw new Error('Resgate não encontrado.');
+    const resgate = resgateSnap.data();
+    if (resgate.status !== 'pendente') {
+      mostrarMensagem(msgEl, 'Este resgate já foi finalizado.', 'error');
+      return;
+    }
+
+    // 2. Upload do comprovante (se fornecido)
+    let comprovanteUrl = null;
+    const file = fileEl?.files?.[0];
+    if (file) {
+      const ref  = storageRef(storage, `comprovantes/${rid}`);
+      await uploadBytes(ref, file);
+      comprovanteUrl = await getDownloadURL(ref);
+    }
+
+    // 3. Transação: debita pontos do vet e marca resgate como finalizado
+    const userRef    = doc(db, 'users', resgate.vetUid);
+    const resgateRef = doc(db, 'resgates', rid);
+    await runTransaction(db, async (tx) => {
+      const userSnap = await tx.get(userRef);
+      if (!userSnap.exists()) throw new Error('Usuário não encontrado.');
+      const pontosAtuais = userSnap.data().pontos || 0;
+      if (pontosAtuais < resgate.pontosResgatados) throw new Error('Saldo insuficiente.');
+      tx.update(userRef,    { pontos: pontosAtuais - resgate.pontosResgatados });
+      tx.update(resgateRef, {
+        status: 'finalizado',
+        finalizadoEm: serverTimestamp(),
+        ...(comprovanteUrl ? { comprovanteUrl } : {})
+      });
+    });
+
+    mostrarMensagem(msgEl, 'Resgate finalizado com sucesso!', 'success');
+    setTimeout(() => {
+      fecharModalFinalizarResgate();
+      carregarResgatesPendentes();
+      carregarResgatesHistorico();
+    }, 1200);
+  } catch (err) {
+    console.error(err);
+    mostrarMensagem(msgEl, err.message || 'Erro ao finalizar resgate.', 'error');
+  } finally {
+    pararLoading(btn);
+  }
+};
+
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function carregarDashboard() {
   // Cotação
@@ -612,10 +777,11 @@ async function executarBuscaDash(termo) {
 
     const encontrados = snap.docs
       .map(d => ({ uid: d.id, ...d.data() }))
-      .filter(u =>
-        (!u.role || u.role === 'vet') &&
-        (u.nome?.toLowerCase().includes(termoLower) || u.crmv?.toLowerCase().includes(termoLower))
-      );
+      .filter(u => {
+        const r = (u.role || '').trim();
+        return (!r || r === 'vet') &&
+          (u.nome?.toLowerCase().includes(termoLower) || u.crmv?.toLowerCase().includes(termoLower));
+      });
 
     if (encontrados.length === 0) {
       resultEl.innerHTML = '<p class="empty-state">Nenhum parceiro encontrado.</p>';
@@ -636,6 +802,10 @@ async function executarBuscaDash(termo) {
             <span class="dash-points-label">pontos</span>
           </div>
           ${equiv ? `<div class="dash-cotacao-equiv">≈ R$ ${equiv}</div>` : ''}
+          <button class="btn btn-primary btn-block" style="margin-top:8px"
+            onclick="abrirModalResgate('${esc(u.uid)}','${esc(u.nome || '')}','${esc(u.crmv || '')}','${esc(u.cpf || '')}',${pontos})">
+            Trocar pontos
+          </button>
         </div>
       `;
     }).join('');
@@ -669,30 +839,23 @@ async function carregarSlotsCarrosel() {
   [0, 1, 2].forEach(i => {
     const slotKey = `slot${i}`;
     const url     = carouselData[slotKey] || '';
+    const temImg  = !!url;
 
     const slot = document.createElement('div');
-    slot.className = 'carousel-slot';
+    slot.className = 'carousel-slot carousel-slot--compact';
     slot.innerHTML = `
-      ${url
-        ? `<img src="${url}" class="carousel-slot-preview" alt="Imagem ${i + 1}">`
-        : `<div class="carousel-slot-empty">
-             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-               <rect x="3" y="3" width="18" height="18" rx="3"/>
-               <circle cx="8.5" cy="8.5" r="1.5"/>
-               <polyline points="21 15 16 10 5 21"/>
-             </svg>
-             <span>Sem imagem</span>
-           </div>`
-      }
-      <div class="carousel-slot-footer">
+      <div class="carousel-slot-status">
+        <span class="badge-status ${temImg ? 'badge-status--finalizado' : 'badge-status--pendente'}">
+          ${temImg ? 'Ativa' : 'Vazia'}
+        </span>
         <span class="carousel-slot-label">Imagem ${i + 1}</span>
-        <div class="carousel-slot-actions">
-          <label class="btn-sm btn-sm--teal" style="cursor:pointer">
-            Upload
-            <input type="file" accept="image/*" style="display:none" data-slot="${i}" class="slot-file-input">
-          </label>
-          ${url ? `<button class="btn-sm btn-sm--red" data-slot="${i}" onclick="removerImagemSlot(${i})">Remover</button>` : ''}
-        </div>
+      </div>
+      <div class="carousel-slot-actions">
+        <label class="btn-sm btn-sm--teal" style="cursor:pointer">
+          ${temImg ? 'Substituir' : 'Upload'}
+          <input type="file" accept="image/*" style="display:none" data-slot="${i}" class="slot-file-input">
+        </label>
+        ${temImg ? `<button class="btn-sm btn-sm--red" onclick="removerImagemSlot(${i})">Remover</button>` : ''}
       </div>
     `;
     container.appendChild(slot);
@@ -703,7 +866,7 @@ async function carregarSlotsCarrosel() {
       const file = e.target.files[0];
       if (!file) return;
       if (file.size > 2 * 1024 * 1024) {
-        alert('Imagem muito grande. Máximo 2 MB.');
+        mostrarMensagem(document.getElementById('cotacao-msg'), 'Imagem muito grande. Máximo 2 MB.', 'error');
         return;
       }
       const slotIdx = parseInt(input.dataset.slot, 10);
@@ -718,52 +881,180 @@ async function uploadImagemSlot(slotIdx, file) {
   const slot      = slots?.[slotIdx];
   if (!slot) return;
 
-  const uploadLabel = slot.querySelector('label.btn-sm');
-  if (uploadLabel) { uploadLabel.textContent = 'Enviando…'; uploadLabel.style.opacity = '0.6'; }
+  const label = slot.querySelector('label.btn-sm');
+  if (label) { label.textContent = 'Enviando…'; label.style.opacity = '0.6'; }
 
   try {
-    const base64 = await redimensionarImagem(file);
-    const slotKey = `slot${slotIdx}`;
-    await setDoc(doc(db, 'config', 'carousel'), { [slotKey]: base64 }, { merge: true });
+    const ref  = storageRef(storage, `carousel/slot${slotIdx}.jpg`);
+    await uploadBytes(ref, file);
+    const url  = await getDownloadURL(ref);
+    await setDoc(doc(db, 'config', 'carousel'), { [`slot${slotIdx}`]: url }, { merge: true });
     await carregarSlotsCarrosel();
   } catch (err) {
     console.error(err);
-    alert('Erro ao fazer upload. Tente novamente.');
-    if (uploadLabel) { uploadLabel.textContent = 'Upload'; uploadLabel.style.opacity = '1'; }
+    mostrarMensagem(document.getElementById('cotacao-msg'), 'Erro ao fazer upload. Tente novamente.', 'error');
+    if (label) { label.textContent = 'Upload'; label.style.opacity = '1'; }
   }
 }
 
 window.removerImagemSlot = async function(slotIdx) {
-  if (!confirm(`Remover imagem ${slotIdx + 1}?`)) return;
   try {
+    const ref = storageRef(storage, `carousel/slot${slotIdx}.jpg`);
+    await deleteObject(ref).catch(() => {}); // ignora se não existir no Storage
     await setDoc(doc(db, 'config', 'carousel'), { [`slot${slotIdx}`]: '' }, { merge: true });
     await carregarSlotsCarrosel();
   } catch (err) {
     console.error(err);
-    alert('Erro ao remover. Tente novamente.');
+    mostrarMensagem(document.getElementById('cotacao-msg'), 'Erro ao remover. Tente novamente.', 'error');
   }
 };
 
-function redimensionarImagem(file, maxWidth = 1200, quality = 0.82) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const ratio  = Math.min(maxWidth / img.width, 1);
-        const canvas = document.createElement('canvas');
-        canvas.width  = Math.round(img.width * ratio);
-        canvas.height = Math.round(img.height * ratio);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = e.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+// ── COMPROVANTE DE RESGATE ────────────────────────────────────────────────────
+function abrirComprovante(dados) {
+  const v = document.getElementById('print-comprovante-view');
+  if (!v) return;
+
+  const dataHora = dados.solicitadoEm
+    ? (dados.solicitadoEm.toDate
+        ? dados.solicitadoEm.toDate()
+        : new Date(dados.solicitadoEm)
+      ).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })
+    : new Date().toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' });
+
+  const cotStr = `${(dados.cotacaoSnapshot?.pontosBase ?? 1000).toLocaleString('pt-BR')} pts = R$ ${
+    (dados.cotacaoSnapshot?.valorReais ?? 15).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  document.getElementById('comp-protocolo').textContent  = dados.protocolo || '—';
+  document.getElementById('comp-data').textContent       = dataHora;
+  document.getElementById('comp-vet-nome').textContent   = dados.vetNome || '—';
+  document.getElementById('comp-vet-crmv').textContent   = dados.vetCrmv || '—';
+  document.getElementById('comp-vet-cpf').textContent    = mascararCpf(dados.vetCpf);
+  document.getElementById('comp-estab').textContent      = dados.estabelecimento || '—';
+  document.getElementById('comp-pontos').textContent     = (dados.pontosResgatados || 0).toLocaleString('pt-BR');
+  document.getElementById('comp-valor').textContent      = 'R$ ' + (dados.valorReais || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  document.getElementById('comp-cotacao').textContent    = cotStr;
+
+  ocultarTodasViews();
+  v.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+window.fecharComprovante = function() {
+  const v = document.getElementById('print-comprovante-view');
+  if (v) v.classList.remove('active');
+  mostrarDashboardView();
+};
+
+// ── MODAL DE RESGATE (Dashboard) ──────────────────────────────────────────────
+let resgateAtual = null; // { vetUid, vetNome, vetCrmv, vetCpf, pontosDisponiveis }
+
+window.abrirModalResgate = function(vetUid, vetNome, vetCrmv, vetCpf, pontosDisponiveis) {
+  resgateAtual = { vetUid, vetNome, vetCrmv, vetCpf, pontosDisponiveis };
+
+  document.getElementById('resgate-vet-label').textContent =
+    `${vetNome || '—'} · CRMV: ${vetCrmv || '—'}`;
+  document.getElementById('resgate-pontos-max').textContent =
+    pontosDisponiveis.toLocaleString('pt-BR');
+
+  const inputPontos = document.getElementById('resgate-pontos-input');
+  inputPontos.value = '';
+  inputPontos.max   = pontosDisponiveis;
+
+  document.getElementById('resgate-estabelecimento').value = '';
+  document.getElementById('resgate-valor-calc').textContent = '—';
+  document.getElementById('btn-resgate-confirmar').disabled = true;
+  limparMensagem(document.getElementById('resgate-msg'));
+
+  document.getElementById('modal-resgate').classList.remove('hidden');
+};
+
+function fecharModalResgate() {
+  document.getElementById('modal-resgate').classList.add('hidden');
+  resgateAtual = null;
+}
+
+function atualizarValorResgate() {
+  const inputPontos = document.getElementById('resgate-pontos-input');
+  const pts = parseInt(inputPontos.value, 10) || 0;
+  const max = resgateAtual?.pontosDisponiveis ?? 0;
+  const estabelecimento = document.getElementById('resgate-estabelecimento').value.trim();
+
+  const valido = pts > 0 && pts <= max && !!estabelecimento;
+  document.getElementById('btn-resgate-confirmar').disabled = !valido;
+
+  if (pts > 0 && dashCotacao.pontosBase) {
+    const valor = (pts / dashCotacao.pontosBase) * dashCotacao.valorReais;
+    document.getElementById('resgate-valor-calc').textContent =
+      'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  } else {
+    document.getElementById('resgate-valor-calc').textContent = '—';
+  }
+}
+
+async function confirmarResgate() {
+  if (!resgateAtual) return;
+
+  const pontosResgatados = parseInt(document.getElementById('resgate-pontos-input').value, 10);
+  const estabelecimento  = document.getElementById('resgate-estabelecimento').value.trim();
+  const msgEl            = document.getElementById('resgate-msg');
+
+  if (!estabelecimento) {
+    mostrarMensagem(msgEl, 'Informe o nome do estabelecimento.', 'error');
+    return;
+  }
+  if (!pontosResgatados || pontosResgatados <= 0) {
+    mostrarMensagem(msgEl, 'Informe os pontos a resgatar.', 'error');
+    return;
+  }
+  if (pontosResgatados > resgateAtual.pontosDisponiveis) {
+    mostrarMensagem(msgEl, 'Pontos insuficientes.', 'error');
+    return;
+  }
+
+  const valorReais = (pontosResgatados / dashCotacao.pontosBase) * dashCotacao.valorReais;
+  const btn = document.getElementById('btn-resgate-confirmar');
+  iniciarLoading(btn);
+
+  try {
+    const currentUser = auth.currentUser;
+    const userSnap    = await getDoc(doc(db, 'users', currentUser.uid));
+    const dashNome    = userSnap.exists() ? (userSnap.data().nome || currentUser.email) : currentUser.email;
+
+    const docRef = await addDoc(collection(db, 'resgates'), {
+      vetUid:           resgateAtual.vetUid,
+      vetNome:          resgateAtual.vetNome,
+      vetCrmv:          resgateAtual.vetCrmv,
+      vetCpf:           resgateAtual.vetCpf,
+      estabelecimento,
+      pontosResgatados,
+      valorReais,
+      cotacaoSnapshot:  { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais },
+      status:           'pendente',
+      solicitadoPor:    { uid: currentUser.uid, nome: dashNome },
+      solicitadoEm:     serverTimestamp(),
+      comprovanteUrl:   null,
+      finalizadoEm:     null,
+      finalizadoPor:    null,
+    });
+
+    fecharModalResgate();
+    abrirComprovante({
+      protocolo:        docRef.id,
+      vetNome:          resgateAtual.vetNome,
+      vetCrmv:          resgateAtual.vetCrmv,
+      vetCpf:           resgateAtual.vetCpf,
+      estabelecimento,
+      pontosResgatados,
+      valorReais,
+      cotacaoSnapshot:  { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais },
+      solicitadoEm:     new Date(),
+    });
+  } catch (err) {
+    console.error(err);
+    mostrarMensagem(msgEl, 'Erro ao registrar resgate. Tente novamente.', 'error');
+  } finally {
+    pararLoading(btn);
+  }
 }
 
 // ── UTILITÁRIOS DE UI ─────────────────────────────────────────────────────────
@@ -819,6 +1110,18 @@ function esc(str) {
     .replace(/"/g, '&quot;');
 }
 
+function mascararCpf(cpf) {
+  const limpo = String(cpf || '').replace(/\D/g, '');
+  if (limpo.length !== 11) return cpf || '—';
+  return `${limpo.slice(0, 3)}.***.***-${limpo.slice(-2)}`;
+}
+
+function formatarDataHora(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
 // ── ERROS FIREBASE ────────────────────────────────────────────────────────────
 function traduzErro(code) {
   const mapa = {
@@ -835,10 +1138,43 @@ function traduzErro(code) {
 }
 
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
+function mostrarToastAtualizacao(onConfirm) {
+  let toast = document.getElementById('sw-update-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'sw-update-toast';
+    toast.innerHTML = `
+      <span>Nova versão disponível.</span>
+      <button id="sw-update-btn">Atualizar</button>
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.classList.add('sw-toast--visible');
+  document.getElementById('sw-update-btn').onclick = () => {
+    toast.classList.remove('sw-toast--visible');
+    onConfirm();
+  };
+}
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('service-worker.js')
-      .catch(err => console.error('SW:', err));
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+      setInterval(() => reg.update(), 30 * 60 * 1000);
+
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            mostrarToastAtualizacao(() => {
+              newSW.postMessage({ type: 'SKIP_WAITING' });
+            });
+          }
+        });
+      });
+    }).catch(err => console.error('SW:', err));
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   });
 }
