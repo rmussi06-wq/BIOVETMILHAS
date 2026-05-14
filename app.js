@@ -447,6 +447,10 @@ async function carregarAdmin() {
       btn.classList.add('tab-btn--active');
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
       document.getElementById(btn.dataset.tab)?.classList.remove('hidden');
+      if (btn.dataset.tab === 'tab-resgates') {
+        carregarResgatesPendentes();
+        carregarResgatesHistorico();
+      }
     });
   });
 
@@ -582,6 +586,86 @@ async function salvarCotacao() {
     pararLoading(btn);
   }
 }
+
+// ── ADMIN RESGATES ────────────────────────────────────────────────────────────
+let _resgateAtual = null; // resgate sendo finalizado
+
+async function carregarResgatesPendentes() {
+  const el = document.getElementById('admin-resgates-pendentes');
+  if (!el) return;
+  el.innerHTML = '<p class="empty-state">Carregando...</p>';
+  try {
+    const q    = query(collection(db, 'resgates'), where('status', '==', 'pendente'), orderBy('criadoEm', 'desc'));
+    const snap = await getDocs(q);
+    renderResgateCards(el, snap.docs, true);
+  } catch (err) {
+    console.error(err);
+    el.innerHTML = '<p class="empty-state">Erro ao carregar resgates.</p>';
+  }
+}
+
+async function carregarResgatesHistorico() {
+  const el = document.getElementById('admin-resgates-historico');
+  if (!el) return;
+  el.innerHTML = '<p class="empty-state">Carregando...</p>';
+  try {
+    const q    = query(collection(db, 'resgates'), where('status', '==', 'finalizado'), orderBy('criadoEm', 'desc'));
+    const snap = await getDocs(q);
+    renderResgateCards(el, snap.docs, false);
+  } catch (err) {
+    console.error(err);
+    el.innerHTML = '<p class="empty-state">Erro ao carregar histórico.</p>';
+  }
+}
+
+function renderResgateCards(container, docs, comAcao) {
+  if (docs.length === 0) {
+    container.innerHTML = '<p class="empty-state">Nenhum registro encontrado.</p>';
+    return;
+  }
+  container.innerHTML = docs.map(d => {
+    const r   = d.data();
+    const rid = d.id;
+    const status = r.status === 'finalizado' ? 'finalizado' : 'pendente';
+    return `
+      <div class="resgate-card resgate-card--${status}">
+        <div class="resgate-card-header">
+          <span class="resgate-card-vet">${esc(r.vetNome || '—')}</span>
+          <span class="resgate-card-data">${formatarDataHora(r.criadoEm)}</span>
+        </div>
+        <div class="resgate-card-info">
+          <span>CRMV: ${esc(r.vetCrmv || '—')}</span>
+          <span>CPF: ${mascararCpf(r.vetCpf)}</span>
+          <span class="resgate-card-estab">Estabelecimento: ${esc(r.estabelecimento || '—')}</span>
+          <span class="resgate-card-pontos">${(r.pontosResgatados || 0).toLocaleString('pt-BR')} pts</span>
+        </div>
+        <div class="resgate-card-info">
+          <span>Protocolo: ${esc(r.protocolo || rid.slice(0, 8).toUpperCase())}</span>
+          <span><span class="badge-status badge-status--${status}">${status}</span></span>
+        </div>
+        ${comAcao ? `
+        <div class="resgate-card-actions">
+          <button class="btn btn-primary" onclick="abrirModalFinalizarResgate('${rid}')">Finalizar</button>
+        </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+window.abrirModalFinalizarResgate = function(resgateId) {
+  const docs = document.querySelectorAll('.resgate-card');
+  // busca o resgate nos dados já renderizados via atributo
+  _resgateAtual = { id: resgateId };
+  const msgEl = document.getElementById('finalizar-resgate-msg');
+  limparMensagem(msgEl);
+  document.getElementById('finalizar-comprovante-input').value = '';
+  document.getElementById('finalizar-resgate-label').textContent = `Resgate ID: ${resgateId.slice(0, 8).toUpperCase()}`;
+  document.getElementById('modal-finalizar-resgate').classList.remove('hidden');
+};
+
+window.fecharModalFinalizarResgate = function() {
+  document.getElementById('modal-finalizar-resgate').classList.add('hidden');
+  _resgateAtual = null;
+};
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function carregarDashboard() {

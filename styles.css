@@ -1258,6 +1258,67 @@ input:focus {
 }
 
 /* ════════════════════════════════
+   ADMIN — ABA RESGATES
+   ════════════════════════════════ */
+.resgates-section { margin-bottom: 28px; }
+
+.resgates-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+
+.resgate-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resgate-card--pendente { border-left: 4px solid var(--teal); }
+.resgate-card--finalizado { border-left: 4px solid #aaa; opacity: 0.85; }
+
+.resgate-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.resgate-card-vet { font-weight: 700; font-size: 0.97rem; color: var(--text-dark); }
+.resgate-card-data { font-size: 0.78rem; color: var(--text-soft); white-space: nowrap; }
+
+.resgate-card-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.resgate-card-pontos {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--teal-dark);
+}
+
+.resgate-card-estab { font-size: 0.85rem; color: var(--text-soft); }
+
+.resgate-card-actions { margin-top: 4px; display: flex; gap: 8px; }
+
+.badge-status {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-status--pendente  { background: #FFF3CD; color: #856404; }
+.badge-status--finalizado { background: #D1FAE5; color: #065F46; }
+
+/* ════════════════════════════════
    TOAST DE ATUALIZAÇÃO SW
    ════════════════════════════════ */
 #sw-update-toast {
