@@ -189,6 +189,9 @@ onAuthStateChanged(auth, async (user) => {
       } else if (role === 'dashboard') {
         await carregarDashboard();
         mostrarDashboardView();
+      } else if (role === 'vet2' || role === 'escritor') {
+        window.location.replace('/guia/');
+        return;
       } else if (data.approved === true) {
         await carregarDadosHome(user, data);
         mostrarHomeView();

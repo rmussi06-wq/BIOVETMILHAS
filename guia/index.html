@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guia de Prescrição — Biovetfarma</title>
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="guia.css">
+</head>
+<body>
+
+  <!-- ── LOADING ──────────────────────────────────────────────────────────── -->
+  <div id="guia-loading">
+    <div class="spinner"></div>
+    <p>Carregando Guia de Prescrição...</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       VIEW ESCRITOR
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section id="view-escritor" class="guia-view">
+
+    <header class="guia-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="/assets/logo-biovetfarma.png" class="guia-header__logo" alt="Biovetfarma">
+        <span class="guia-header__title">✏️ Editor de Compêndio</span>
+      </div>
+      <div class="guia-header__right">
+        <span class="guia-header__user" id="escritor-nome-user"></span>
+        <button class="btn-logout" id="escritor-logout-btn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sair
+        </button>
+      </div>
+    </header>
+
+    <div class="guia-body">
+
+      <!-- Sidebar lista de medicamentos -->
+      <aside class="escritor-sidebar">
+        <div class="escritor-sidebar__head">
+          <button class="btn-primary btn-sm" id="btn-novo-med" type="button">+ Novo</button>
+          <input type="search" class="guia-input btn-sm" id="escritor-search-input"
+                 placeholder="Filtrar..." style="flex:1">
+        </div>
+        <div class="escritor-sidebar__list" id="escritor-lista-meds">
+          <!-- items inseridos via JS -->
+        </div>
+      </aside>
+
+      <!-- Área de edição -->
+      <div class="escritor-editor">
+        <div class="escritor-editor__toolbar" id="escritor-toolbar">
+          <span id="escritor-toolbar-nome" style="font-weight:800;font-size:0.9rem;color:var(--text);flex:1">
+            Selecione ou crie um medicamento
+          </span>
+          <button class="btn-secondary btn-sm" id="btn-ia" type="button" title="Melhorar seção com IA">✨ Melhorar com IA</button>
+          <button class="btn-secondary btn-sm" id="btn-salvar-rascunho" type="button">💾 Salvar</button>
+          <button class="btn-primary btn-sm"   id="btn-publicar" type="button">🚀 Publicar</button>
+        </div>
+
+        <div class="escritor-editor__scroll" id="escritor-area">
+
+          <div id="escritor-placeholder" style="padding:60px 20px;text-align:center;color:var(--text-muted)">
+            <p style="font-size:2rem;margin-bottom:8px">📖</p>
+            <p>Selecione um medicamento na lista ou crie um novo.</p>
+          </div>
+
+          <!-- Formulário de edição (oculto até selecionar/criar) -->
+          <div id="escritor-form" style="display:none">
+
+            <!-- Seção 1 — Identificação -->
+            <div class="ficha-section">
+              <div class="ficha-section__title">Identificação</div>
+              <div class="form-group">
+                <label class="guia-label">Nome Comercial *</label>
+                <input type="text" id="ed-nome-comercial" class="guia-input" placeholder="Ex: RenaDogs®">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="guia-label">Fabricante</label>
+                  <input type="text" id="ed-fabricante" class="guia-input" placeholder="Ex: BIOCTAL">
+                </div>
+                <div class="form-group">
+                  <label class="guia-label">Classificação</label>
+                  <select id="ed-classificacao" class="guia-select">
+                    <option value="">Selecionar...</option>
+                    <option>Antibiótico</option>
+                    <option>Anti-inflamatório</option>
+                    <option>Anestésico</option>
+                    <option>Suplemento</option>
+                    <option>Antiparasitário</option>
+                    <option>Hormonal</option>
+                    <option>Cardiovascular</option>
+                    <option>Gastrointestinal</option>
+                    <option>Neurológico</option>
+                    <option>Dermatológico</option>
+                    <option>Oftálmico</option>
+                    <option>Vacina</option>
+                    <option>Outro</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="guia-label">Princípios Ativos (Enter para adicionar)</label>
+                <div class="tags-wrap" id="ed-principios-wrap">
+                  <input class="tags-input" id="ed-principios-input" placeholder="Digite e pressione Enter...">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="guia-label">Espécies (Enter para adicionar)</label>
+                <div class="tags-wrap" id="ed-especies-wrap">
+                  <input class="tags-input" id="ed-especies-input" placeholder="Ex: Cães, Gatos, Bovinos...">
+                </div>
+              </div>
+            </div>
+
+            <!-- Seção 2 — Sobre -->
+            <div class="ficha-section">
+              <div class="ficha-section__title">
+                Sobre / Descrição Geral
+                <button class="btn-secondary btn-sm" type="button"
+                        onclick="window.abrirIA('sobre','Sobre / Descrição Geral')">✨ IA</button>
+              </div>
+              <div class="form-group">
+                <textarea id="ed-sobre" class="guia-textarea" rows="4"
+                          placeholder="Descrição geral do medicamento..."></textarea>
+              </div>
+            </div>
+
+            <!-- Seção 3 — Indicações -->
+            <div class="ficha-section">
+              <div class="ficha-section__title">
+                Indicações e Contraindicações
+                <button class="btn-secondary btn-sm" type="button"
+                        onclick="window.abrirIA('indicacoes','Indicações e Contraindicações')">✨ IA</button>
+              </div>
+              <div class="form-group">
+                <label class="guia-label">Indicações</label>
+                <textarea id="ed-indicacoes" class="guia-textarea" rows="3"
+                          placeholder="Indicações terapêuticas..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="guia-label">Contraindicações</label>
+                <textarea id="ed-contraindicacoes" class="guia-textarea" rows="3"
+                          placeholder="Contraindicações e advertências..."></textarea>
+              </div>
+            </div>
+
+            <!-- Seção 4 — Posologia -->
+            <div class="ficha-section">
+              <div class="ficha-section__title">
+                Administração e Doses
+                <button class="btn-secondary btn-sm" type="button"
+                        onclick="window.adicionarLinhaPosologia()">+ Linha</button>
+              </div>
+              <div class="posologia-table-wrap">
+                <table class="posologia-table" id="posologia-table">
+                  <thead>
+                    <tr>
+                      <th>Espécie</th>
+                      <th>Dose Mín (mg/kg)</th>
+                      <th>Dose Máx (mg/kg)</th>
+                      <th>Unidade</th>
+                      <th>Via</th>
+                      <th>Intervalo</th>
+                      <th>Duração</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="posologia-tbody">
+                    <!-- linhas inseridas via JS -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="form-group" style="margin-top:12px">
+                <label class="guia-label">Observações gerais de posologia</label>
+                <textarea id="ed-posologia-obs" class="guia-textarea" rows="2"
+                          placeholder="Observações adicionais sobre posologia..."></textarea>
+              </div>
+            </div>
+
+            <!-- Seção 5 — Interações -->
+            <div class="ficha-section">
+              <div class="ficha-section__title">
+                Interações Medicamentosas
+                <button class="btn-secondary btn-sm" type="button"
+                        onclick="window.abrirIA('interacoes','Interações Medicamentosas')">✨ IA</button>
+              </div>
+              <textarea id="ed-interacoes" class="guia-textarea" rows="4"
+                        placeholder="Interações com outros fármacos..."></textarea>
+            </div>
+
+            <!-- Seção 6 — Farmacologia -->
+            <div class="ficha-section">
+              <div class="ficha-section__title">
+                Farmacologia
+                <button class="btn-secondary btn-sm" type="button"
+                        onclick="window.abrirIA('farmacologia','Farmacologia')">✨ IA</button>
+              </div>
+              <div class="form-group">
+                <label class="guia-label">Mecanismo de Ação</label>
+                <textarea id="ed-mecanismo" class="guia-textarea" rows="3"
+                          placeholder="Mecanismo de ação farmacológica..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="guia-label">Farmacocinética</label>
+                <textarea id="ed-farmacocinetica" class="guia-textarea" rows="3"
+                          placeholder="Absorção, distribuição, metabolismo, excreção..."></textarea>
+              </div>
+            </div>
+
+            <!-- Seção 7 — Referências -->
+            <div class="ficha-section">
+              <div class="ficha-section__title">
+                Referências Bibliográficas
+                <button class="btn-secondary btn-sm" type="button"
+                        onclick="window.adicionarReferencia()">+ Referência</button>
+              </div>
+              <div class="referencias-list" id="referencias-list">
+                <!-- itens via JS -->
+              </div>
+              <div class="form-group" style="margin-top:12px">
+                <label class="guia-label">PDF de Referência (apenas contexto da IA — não publicado)</label>
+                <input type="file" id="ed-pdf-ref" accept="application/pdf" class="guia-input">
+              </div>
+            </div>
+
+            <p id="escritor-msg" class="guia-msg" style="display:none"></p>
+
+          </div><!-- /escritor-form -->
+        </div><!-- /escritor-editor__scroll -->
+      </div><!-- /escritor-editor -->
+    </div><!-- /guia-body -->
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       VIEW LEITURA
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section id="view-leitura" class="guia-view">
+
+    <header class="guia-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="/assets/logo-biovetfarma.png" class="guia-header__logo" alt="Biovetfarma">
+        <span class="guia-header__title">📖 Guia de Prescrição</span>
+      </div>
+      <div class="guia-header__right">
+        <span class="guia-header__user" id="leitura-nome-user"></span>
+        <button class="btn-logout" id="leitura-logout-btn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sair
+        </button>
+      </div>
+    </header>
+
+    <!-- Busca -->
+    <div class="leitura-search-bar">
+      <div class="leitura-search-bar__inner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" id="leitura-search-input"
+               placeholder="Buscar por nome comercial ou princípio ativo...">
+      </div>
+    </div>
+
+    <div class="guia-body">
+
+      <!-- Sidebar resultados -->
+      <aside class="leitura-sidebar">
+        <div class="leitura-sidebar__head">Medicamentos</div>
+        <div id="leitura-lista-meds">
+          <div class="sidebar-empty">Digite para buscar</div>
+        </div>
+      </aside>
+
+      <!-- Área da ficha -->
+      <main class="leitura-main" id="leitura-main">
+        <div class="ficha-empty" id="leitura-placeholder">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+          <p>Selecione um medicamento para ver a ficha</p>
+        </div>
+
+        <div id="leitura-ficha" style="display:none">
+          <!-- Preenchido via JS -->
+        </div>
+      </main>
+
+    </div><!-- /guia-body -->
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MODAL — MELHORAR COM IA
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="modal-ia" class="guia-modal-backdrop hidden">
+    <div class="guia-modal" style="max-width:800px">
+      <div class="guia-modal__head">
+        <h2>✨ Melhorar com IA — <span id="ia-secao-nome"></span></h2>
+        <button class="guia-modal__close" onclick="window.fecharModalIA()" type="button">×</button>
+      </div>
+      <div class="guia-modal__body">
+        <div id="ia-loading" class="ia-loading" style="display:none">
+          <div class="spinner"></div>
+          <p>Gerando sugestão com Gemini AI...</p>
+        </div>
+        <div id="ia-comparacao" class="ia-comparacao" style="display:none">
+          <div class="ia-comparacao__col">
+            <h3>Original</h3>
+            <div class="ia-comparacao__box" id="ia-texto-original"></div>
+          </div>
+          <div class="ia-comparacao__col">
+            <h3>Sugestão da IA</h3>
+            <div class="ia-comparacao__box ia-comparacao__box--sugestao" id="ia-texto-sugestao"></div>
+          </div>
+        </div>
+        <p id="ia-msg" class="guia-msg" style="display:none"></p>
+      </div>
+      <div class="guia-modal__foot">
+        <button class="btn-secondary" id="btn-ia-descartar" onclick="window.fecharModalIA()" type="button">Descartar</button>
+        <button class="btn-primary"   id="btn-ia-aceitar"   onclick="window.aceitarSugestaoIA()" type="button">Aceitar Sugestão</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MODAL — EMITIR RECEITUÁRIO
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="modal-receituario" class="guia-modal-backdrop hidden">
+    <div class="guia-modal" style="max-width:720px">
+      <div class="guia-modal__head">
+        <h2>📄 Emitir Receituário</h2>
+        <button class="guia-modal__close" onclick="window.fecharModalReceituario()" type="button">×</button>
+      </div>
+      <div class="guia-modal__body">
+
+        <p id="rct-msg" class="guia-msg" style="display:none"></p>
+
+        <div class="ficha-section" style="margin-bottom:14px">
+          <div class="ficha-section__title">Paciente</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="guia-label">Nome do Paciente *</label>
+              <input type="text" id="rct-paciente-nome" class="guia-input" placeholder="Nome do animal">
+            </div>
+            <div class="form-group">
+              <label class="guia-label">Peso (kg) *</label>
+              <input type="number" id="rct-paciente-peso" class="guia-input" placeholder="0.0" min="0" step="0.1">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="guia-label">Espécie *</label>
+              <input type="text" id="rct-paciente-especie" class="guia-input" placeholder="Cão, Gato...">
+            </div>
+            <div class="form-group">
+              <label class="guia-label">Raça</label>
+              <input type="text" id="rct-paciente-raca" class="guia-input" placeholder="Raça do animal">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="guia-label">Nome do Tutor / Proprietário *</label>
+            <input type="text" id="rct-tutor-nome" class="guia-input" placeholder="Nome completo">
+          </div>
+        </div>
+
+        <div class="ficha-section" style="margin-bottom:14px">
+          <div class="ficha-section__title">Prescrição</div>
+          <div class="form-group">
+            <label class="guia-label">Medicamento</label>
+            <input type="text" id="rct-med-nome" class="guia-input" readonly>
+          </div>
+          <div class="form-group">
+            <label class="guia-label">Dose Calculada</label>
+            <input type="text" id="rct-dose-calculada" class="guia-input" placeholder="Ex: 480 mg">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="guia-label">Posologia *</label>
+              <input type="text" id="rct-posologia" class="guia-input" placeholder="Ex: 1x ao dia por 10 dias">
+            </div>
+            <div class="form-group">
+              <label class="guia-label">Via de Administração *</label>
+              <input type="text" id="rct-via" class="guia-input" placeholder="Ex: Oral, IM, SC...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="guia-label">Observações</label>
+            <textarea id="rct-observacoes" class="guia-textarea" rows="2"
+                      placeholder="Instruções adicionais..."></textarea>
+          </div>
+        </div>
+
+        <div class="ficha-section">
+          <div class="ficha-section__title">Assinatura Digital</div>
+          <div class="canvas-assinatura-wrap">
+            <canvas id="canvas-assinatura" width="640" height="150"></canvas>
+            <button class="btn-limpar-assinatura" type="button" onclick="window.limparAssinatura()">Limpar</button>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">
+            Assine com o mouse ou o dedo (touch)
+          </p>
+        </div>
+
+      </div>
+      <div class="guia-modal__foot">
+        <button class="btn-secondary" onclick="window.fecharModalReceituario()" type="button">Cancelar</button>
+        <button class="btn-primary"   id="btn-emitir-confirmar"
+                onclick="window.confirmarReceituario()" type="button">📄 Emitir Receituário</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       RECEITUÁRIO IMPRIMÍVEL (oculto até emissão)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="print-receituario-view">
+    <div class="rct-page" id="rct-print-content">
+      <!-- Preenchido via JS antes da impressão -->
+    </div>
+  </div>
+
+  <!-- Scripts externos -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Módulo principal -->
+  <script type="module" src="guia.js"></script>
+</body>
+</html>
