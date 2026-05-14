@@ -197,7 +197,7 @@ const snap = await getDocs(query(collection(db, 'users'), orderBy('nome')));
 Com 5.000 usuários, fica lento e caro. **Solução:** salvar campo `nome_lower` no documento e usar:
 ```javascript
 where('nome_lower', '>=', termo)
-  .where('nome_lower', '<=', termo + '\uf8ff')
+  .where('nome_lower', '<=', termo + '')
   .limit(20)
 ```
 
@@ -205,9 +205,9 @@ where('nome_lower', '>=', termo)
 
 Frágil. Preferir `data-uid="..."` + delegação de eventos.
 
-### 5.3. Imagens do carrossel salvas como base64 no Firestore
+### 5.3. Imagens do carrossel salvas como base64 no Firestore — ✅ RESOLVIDO (Fase 2)
 
-**Solução planejada na Fase 2 (seção 10):** migrar para Firebase Storage.
+Migrado para Firebase Storage (`carousel/slot0.jpg` etc.). Firestore guarda apenas as URLs.
 
 ### 5.4. Cache do Service Worker — ✅ RESOLVIDO (Fase 1)
 
@@ -244,7 +244,7 @@ Em conexão rápida o usuário espera à toa. Idealmente esconder quando `onAuth
 ## Status atual
 
 - ✅ **Fase 1 (Correções e base) — CONCLUÍDA**
-- 🔲 Fase 2 — Funcionalidade core nova
+- ✅ **Fase 2 (Fluxo de resgate + carrossel Storage) — CONCLUÍDA**
 - 🔲 Fase 3 — Notificações in-app + FCM push (plano Blaze já ativo)
 - 🔲 Fase 4 — Onboarding `/install` + letreiro de voos
 
@@ -262,7 +262,18 @@ Implementado:
 
 **Pendência da Fase 1:** os ícones do PWA serão substituídos manualmente pelo usuário (`icon-192.png` e `icon-512.png`) e o `CACHE_NAME` deve ser incrementado de `v8` para `v9` quando isso acontecer.
 
-## 9. Fase 2 — Fluxo de resgate de pontos
+## 9. ✅ Fase 2 — Fluxo de resgate de pontos (CONCLUÍDA)
+
+Implementado:
+- Dashboard: botão "Trocar pontos" nos cards de resultado da busca
+- Modal de resgate com validação, cálculo em tempo real e gravação em `resgates` (status `pendente`, sem debitar pontos)
+- View `print-comprovante-view` com layout A4, `@media print` e botões Voltar/Imprimir
+- `mascararCpf()` — CPF mascarado como `392.***.***-47` no comprovante
+- Admin: terceira aba "Resgates" com seções Pendentes e Histórico
+- Admin: modal "Finalizar Resgate" com upload de comprovante para Firebase Storage (`comprovantes/{id}`)
+- Admin: `runTransaction` — debita pontos do vet e atualiza status para `finalizado` atomicamente
+- Carrossel: upload migrado para Firebase Storage (`carousel/slot0.jpg` etc.), Firestore guarda URLs
+- Carrossel: UI compacta (sem preview grande, apenas status Ativa/Vazia + botões Substituir/Remover)
 
 ### 9.1. Dashboard: botão "Trocar pontos"
 
@@ -339,49 +350,15 @@ function mascararCpf(cpf) {
 
 ### 9.3. Admin: aba "Resgates"
 
-Adicionar **terceira aba** no admin (junto com "Usuários" e "Configurações"): **"Resgates"**, com duas seções.
+Terceira aba no admin com duas seções: **Pendentes** e **Histórico**.
 
-#### Pendentes
+- Cards com: nome + CRMV do vet, CPF mascarado, estabelecimento, pontos, valor, protocolo, data
+- Pendentes: botão "Finalizar" que abre modal com upload de comprovante (PDF/imagem)
+- Ao finalizar: upload para `comprovantes/{resgateId}` no Storage + `runTransaction` debita pontos e atualiza status
 
-Lista de cards mostrando:
-- Veterinário (nome + CRMV)
-- Estabelecimento
-- Pontos resgatados + valor em R$
-- Solicitado por (qual dashboard) e quando
-- Botão **"Anexar comprovante"** (upload imagem/PDF, máx 2 MB → Firebase Storage)
-- Botão **"Finalizar"** (só habilita após anexar comprovante)
+### 9.4. Carrossel — UI compacta + Firebase Storage ✅
 
-Ao finalizar, em **transação Firestore**:
-1. Debita `pontosResgatados` de `users/{vetUid}.pontos`
-2. Atualiza `resgates/{id}` com `status: 'finalizado'`, `comprovanteUrl`, `finalizadoEm`, `finalizadoPor`
-3. Cria notificações (Fase 3)
-
-#### Histórico
-
-Lista de resgates finalizados, ordenados por `finalizadoEm desc`. Cada card mostra os mesmos dados + link para baixar o comprovante. Filtro por mês e busca por nome.
-
-### 9.4. Carrossel — UI compacta + Firebase Storage
-
-Substituir os 3 slots com preview grande pela seguinte UI:
-
-```
-┌─────────────────────────────────────────┐
-│ 📷 Imagens do Carrossel                 │
-│                                         │
-│ Imagem 1: ✓ enviada    [Trocar] [×]    │
-│ Imagem 2: ✓ enviada    [Trocar] [×]    │
-│ Imagem 3: — vazia      [Enviar]        │
-│                                         │
-│ ℹ Especificações:                       │
-│   • Formato: JPG ou PNG                 │
-│   • Resolução ideal: 1200 × 600 px      │
-│   • Tamanho máximo: 2 MB                │
-│   • A imagem será redimensionada        │
-│     automaticamente se for maior        │
-└─────────────────────────────────────────┘
-```
-
-**Onde guardar:** Firebase Storage (`carousel/slot0.jpg`, `slot1.jpg`, `slot2.jpg`). Em `config/carousel` salvar apenas as URLs.
+Upload migrado para Firebase Storage. UI compacta mostra status Ativa/Vazia + botões Substituir/Remover por slot.
 
 ## 10. Fase 3 — Notificações in-app + FCM push real
 
@@ -574,27 +551,7 @@ if (isStandalone) {
 - [ ] **Substituir manualmente** `icons/icon-192.png` e `icons/icon-512.png` pelos arquivos quadrados recortados da logo
 - [ ] Após substituir os ícones, pedir ao Claude Code para incrementar `CACHE_NAME` de v8 para v9
 - [ ] Marcar **Enforce HTTPS** em Settings → Pages assim que o certificado for emitido (24-48h)
-- [ ] Definir lista final de destinos do letreiro de voos (Fase 4)
-
-## 14. Checklist geral
-
-### Segurança e conformidade
-- [ ] Aplicar Firestore Security Rules da seção 4.1 no console do Firebase
-- [ ] Aplicar Storage Security Rules da seção 4.2
-- [ ] Adicionar máscara e validação de CPF/CRMV (seção 4.4)
-- [ ] Publicar política de privacidade
-- [ ] Adicionar consentimento LGPD no cadastro
-- [ ] Implementar exclusão de conta (LGPD)
-
-### Bugs e melhorias
-- [x] `.trim()` no `role` (Fase 1)
-- [x] Timeout no login (Fase 1)
-- [x] Cache-busting do SW + auto-update (Fase 1)
-- [x] E-mail em lowercase (Fase 1)
-- [x] Safe area iOS + font-size 16px + breakpoints (Fase 1)
-
-### Features (roadmap)
-- [ ] Fase 2 — Fluxo de resgate completo + carrossel no Storage
+- [x] Fase 2 — Fluxo de resgate completo + carrossel no Storage
 - [ ] Fase 3 — Notificações in-app + FCM push real (Blaze ativo)
 - [ ] Fase 4 — Página `/install` + letreiro de voos
 
@@ -607,5 +564,5 @@ if (isStandalone) {
 
 ---
 
-*Documento atualizado em maio de 2026. Última revisão: Fase 1 concluída, decisões finais consolidadas, próximo passo é Fase 2.*
+*Documento atualizado em maio de 2026. Última revisão: Fase 2 concluída — fluxo de resgate, comprovante A4, aba Resgates no admin, carrossel migrado para Firebase Storage. Próximo passo: Fase 3 (notificações in-app + FCM push).*
 *Atualize esta linha e o checklist sempre que entregar uma fase.*
