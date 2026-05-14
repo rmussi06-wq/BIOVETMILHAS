@@ -360,6 +360,67 @@
     </div>
   </section>
 
+  <!-- PRINT COMPROVANTE VIEW -->
+  <section id="print-comprovante-view" class="view">
+    <div class="comp-shell no-print-buttons">
+      <div class="comp-actions">
+        <button class="btn btn-outline" onclick="fecharComprovante()">← Voltar</button>
+        <button class="btn btn-primary" onclick="window.print()">Imprimir</button>
+      </div>
+    </div>
+    <div class="comp-page">
+      <div class="comp-header">
+        <img src="assets/logo-biovetfarma.png" class="comp-logo" alt="Biovetfarma">
+        <div class="comp-header-text">
+          <h1 class="comp-titulo">Comprovante de Resgate de Pontos</h1>
+          <p class="comp-subtitulo">Biovetfarma — Manipulação Veterinária</p>
+        </div>
+      </div>
+
+      <div class="comp-protocolo-box">
+        <span class="comp-field-label">Protocolo:</span>
+        <strong id="comp-protocolo" class="comp-protocolo-num"></strong>
+        <span class="comp-field-label" style="margin-left:24px">Data e hora:</span>
+        <strong id="comp-data"></strong>
+      </div>
+
+      <section class="comp-section">
+        <h2 class="comp-section-title">Dados do Veterinário</h2>
+        <div class="comp-grid">
+          <div class="comp-field"><span class="comp-field-label">Nome completo</span><span id="comp-vet-nome" class="comp-field-value"></span></div>
+          <div class="comp-field"><span class="comp-field-label">CRMV</span><span id="comp-vet-crmv" class="comp-field-value"></span></div>
+          <div class="comp-field"><span class="comp-field-label">CPF</span><span id="comp-vet-cpf" class="comp-field-value"></span></div>
+          <div class="comp-field comp-field--wide"><span class="comp-field-label">Estabelecimento</span><span id="comp-estab" class="comp-field-value"></span></div>
+        </div>
+      </section>
+
+      <section class="comp-section">
+        <h2 class="comp-section-title">Resgate</h2>
+        <div class="comp-grid">
+          <div class="comp-field"><span class="comp-field-label">Pontos resgatados</span><span id="comp-pontos" class="comp-field-value comp-destaque"></span></div>
+          <div class="comp-field"><span class="comp-field-label">Valor em R$</span><span id="comp-valor" class="comp-field-value comp-destaque"></span></div>
+          <div class="comp-field comp-field--wide"><span class="comp-field-label">Cotação aplicada</span><span id="comp-cotacao" class="comp-field-value"></span></div>
+        </div>
+      </section>
+
+      <section class="comp-section comp-declaracao">
+        <p>"Declaro, para os devidos fins, que solicitei e recebi o resgate dos pontos acumulados no programa Biovet Pontos."</p>
+      </section>
+
+      <div class="comp-assinatura">
+        <div class="comp-assinatura-linha">
+          <div class="comp-linha-pontilhada"></div>
+          <p class="comp-assinatura-label">Assinatura do Veterinário</p>
+          <p class="comp-assinatura-data">Data: ___/___/______</p>
+        </div>
+      </div>
+
+      <div class="comp-rodape">
+        <p>Biovetfarma — Manipulação Veterinária</p>
+      </div>
+    </div>
+  </section>
+
   <!-- SCRIPT INLINE -->
   <script>
     const splash = document.getElementById('splash');
@@ -369,7 +430,7 @@
         splash.classList.add('splash--out');
         setTimeout(function() {
           splash.style.display = 'none';
-          var views = ['auth-view','home-view','admin-view','dashboard-view'];
+          var views = ['auth-view','home-view','admin-view','dashboard-view','print-comprovante-view'];
           var anyActive = views.some(function(id) {
             return document.getElementById(id).classList.contains('active');
           });

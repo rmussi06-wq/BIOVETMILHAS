@@ -104,7 +104,8 @@ const cardUserCrmvEl = document.getElementById('card-user-crmv');
 
 // ── VIEWS ─────────────────────────────────────────────────────────────────────
 function ocultarTodasViews() {
-  [authView, homeView, adminView, dashboardView].forEach(v => v.classList.remove('active'));
+  [authView, homeView, adminView, dashboardView,
+   document.getElementById('print-comprovante-view')].forEach(v => v?.classList.remove('active'));
 }
 
 function mostrarAuthView(opcoes) {
@@ -792,6 +793,42 @@ function redimensionarImagem(file, maxWidth = 1200, quality = 0.82) {
     reader.readAsDataURL(file);
   });
 }
+
+// ── COMPROVANTE DE RESGATE ────────────────────────────────────────────────────
+function abrirComprovante(dados) {
+  const v = document.getElementById('print-comprovante-view');
+  if (!v) return;
+
+  const dataHora = dados.solicitadoEm
+    ? (dados.solicitadoEm.toDate
+        ? dados.solicitadoEm.toDate()
+        : new Date(dados.solicitadoEm)
+      ).toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' })
+    : new Date().toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' });
+
+  const cotStr = `${(dados.cotacaoSnapshot?.pontosBase ?? 1000).toLocaleString('pt-BR')} pts = R$ ${
+    (dados.cotacaoSnapshot?.valorReais ?? 15).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  document.getElementById('comp-protocolo').textContent  = dados.protocolo || '—';
+  document.getElementById('comp-data').textContent       = dataHora;
+  document.getElementById('comp-vet-nome').textContent   = dados.vetNome || '—';
+  document.getElementById('comp-vet-crmv').textContent   = dados.vetCrmv || '—';
+  document.getElementById('comp-vet-cpf').textContent    = mascararCpf(dados.vetCpf);
+  document.getElementById('comp-estab').textContent      = dados.estabelecimento || '—';
+  document.getElementById('comp-pontos').textContent     = (dados.pontosResgatados || 0).toLocaleString('pt-BR');
+  document.getElementById('comp-valor').textContent      = 'R$ ' + (dados.valorReais || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  document.getElementById('comp-cotacao').textContent    = cotStr;
+
+  ocultarTodasViews();
+  v.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+window.fecharComprovante = function() {
+  const v = document.getElementById('print-comprovante-view');
+  if (v) v.classList.remove('active');
+  mostrarDashboardView();
+};
 
 // ── MODAL DE RESGATE (Dashboard) ──────────────────────────────────────────────
 let resgateAtual = null; // { vetUid, vetNome, vetCrmv, vetCpf, pontosDisponiveis }
