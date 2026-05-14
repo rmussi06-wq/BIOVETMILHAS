@@ -324,15 +324,15 @@
       <h3 class="modal-title">Trocar pontos</h3>
       <p id="resgate-vet-label" class="modal-subtitle"></p>
       <div class="input-group">
-        <label for="resgate-estabelecimento">Nome do estabelecimento</label>
-        <input id="resgate-estabelecimento" type="text" placeholder="Clínica Veterinária…"
+        <label for="resgate-estabelecimento">ID do Agente</label>
+        <input id="resgate-estabelecimento" type="text" placeholder="Nome do Funcionário"
           oninput="atualizarValorResgate()" />
       </div>
       <div class="input-group">
         <label for="resgate-pontos-input">Pontos a resgatar
           <span style="font-weight:600;text-transform:none">(máx: <span id="resgate-pontos-max">0</span>)</span>
         </label>
-        <input id="resgate-pontos-input" type="number" min="1" placeholder="0"
+        <input id="resgate-pontos-input" type="number" min="1000" step="1000" placeholder="0"
           oninput="atualizarValorResgate()" />
       </div>
       <div class="resgate-valor-linha">

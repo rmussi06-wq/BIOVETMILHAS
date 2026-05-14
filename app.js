@@ -959,6 +959,8 @@ window.abrirModalResgate = function(vetUid, vetNome, vetCrmv, vetCpf, pontosDisp
   const inputPontos = document.getElementById('resgate-pontos-input');
   inputPontos.value = '';
   inputPontos.max   = pontosDisponiveis;
+  inputPontos.min   = 1000;
+  inputPontos.step  = 1000;
 
   document.getElementById('resgate-estabelecimento').value = '';
   document.getElementById('resgate-valor-calc').textContent = '—';
@@ -968,19 +970,30 @@ window.abrirModalResgate = function(vetUid, vetNome, vetCrmv, vetCpf, pontosDisp
   document.getElementById('modal-resgate').classList.remove('hidden');
 };
 
-function fecharModalResgate() {
+window.fecharModalResgate = function() {
   document.getElementById('modal-resgate').classList.add('hidden');
   resgateAtual = null;
-}
+};
 
-function atualizarValorResgate() {
+window.atualizarValorResgate = function() {
   const inputPontos = document.getElementById('resgate-pontos-input');
-  const pts = parseInt(inputPontos.value, 10) || 0;
-  const max = resgateAtual?.pontosDisponiveis ?? 0;
-  const estabelecimento = document.getElementById('resgate-estabelecimento').value.trim();
+  const pts  = parseInt(inputPontos.value, 10) || 0;
+  const max  = resgateAtual?.pontosDisponiveis ?? 0;
+  const agente = document.getElementById('resgate-estabelecimento').value.trim();
+  const msgEl  = document.getElementById('resgate-msg');
 
-  const valido = pts > 0 && pts <= max && !!estabelecimento;
+  const multiplo1000 = pts > 0 && pts % 1000 === 0;
+  const valido = multiplo1000 && pts >= 1000 && pts <= max && !!agente;
+
   document.getElementById('btn-resgate-confirmar').disabled = !valido;
+
+  if (pts > 0 && !multiplo1000) {
+    mostrarMensagem(msgEl, 'O valor deve ser múltiplo de 1.000 pontos.', 'error');
+  } else if (pts > max && max > 0) {
+    mostrarMensagem(msgEl, 'Valor superior aos pontos disponíveis.', 'error');
+  } else {
+    limparMensagem(msgEl);
+  }
 
   if (pts > 0 && dashCotacao.pontosBase) {
     const valor = (pts / dashCotacao.pontosBase) * dashCotacao.valorReais;
@@ -989,21 +1002,25 @@ function atualizarValorResgate() {
   } else {
     document.getElementById('resgate-valor-calc').textContent = '—';
   }
-}
+};
 
-async function confirmarResgate() {
+window.confirmarResgate = async function() {
   if (!resgateAtual) return;
 
   const pontosResgatados = parseInt(document.getElementById('resgate-pontos-input').value, 10);
-  const estabelecimento  = document.getElementById('resgate-estabelecimento').value.trim();
+  const agente           = document.getElementById('resgate-estabelecimento').value.trim();
   const msgEl            = document.getElementById('resgate-msg');
 
-  if (!estabelecimento) {
-    mostrarMensagem(msgEl, 'Informe o nome do estabelecimento.', 'error');
+  if (!agente) {
+    mostrarMensagem(msgEl, 'Informe o ID do agente.', 'error');
     return;
   }
-  if (!pontosResgatados || pontosResgatados <= 0) {
-    mostrarMensagem(msgEl, 'Informe os pontos a resgatar.', 'error');
+  if (!pontosResgatados || pontosResgatados < 1000) {
+    mostrarMensagem(msgEl, 'Mínimo de 1.000 pontos para resgatar.', 'error');
+    return;
+  }
+  if (pontosResgatados % 1000 !== 0) {
+    mostrarMensagem(msgEl, 'O valor deve ser múltiplo de 1.000 pontos.', 'error');
     return;
   }
   if (pontosResgatados > resgateAtual.pontosDisponiveis) {
@@ -1025,7 +1042,7 @@ async function confirmarResgate() {
       vetNome:          resgateAtual.vetNome,
       vetCrmv:          resgateAtual.vetCrmv,
       vetCpf:           resgateAtual.vetCpf,
-      estabelecimento,
+      estabelecimento:  agente,
       pontosResgatados,
       valorReais,
       cotacaoSnapshot:  { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais },
@@ -1043,7 +1060,7 @@ async function confirmarResgate() {
       vetNome:          resgateAtual.vetNome,
       vetCrmv:          resgateAtual.vetCrmv,
       vetCpf:           resgateAtual.vetCpf,
-      estabelecimento,
+      estabelecimento:  agente,
       pontosResgatados,
       valorReais,
       cotacaoSnapshot:  { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais },
