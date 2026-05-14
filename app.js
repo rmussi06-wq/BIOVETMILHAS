@@ -15,10 +15,21 @@ import {
   getDoc,
   getDocs,
   updateDoc,
+  addDoc,
   collection,
   query,
-  orderBy
+  orderBy,
+  where,
+  runTransaction,
+  serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js';
 
 // ── CONFIG ───────────────────────────────────────────────────────────────────
 const firebaseConfig = {
@@ -42,9 +53,10 @@ const NOTIFICATION_EMAIL  = '';   // e-mail que receberá os avisos
 const WHATSAPP_NUMBER = '5514997132879';
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
-const fbApp = initializeApp(firebaseConfig);
-const auth  = getAuth(fbApp);
-const db    = getFirestore(fbApp);
+const fbApp   = initializeApp(firebaseConfig);
+const auth    = getAuth(fbApp);
+const db      = getFirestore(fbApp);
+const storage = getStorage(fbApp);
 
 // ── ESTADO ───────────────────────────────────────────────────────────────────
 let isRegistering      = false;
@@ -828,6 +840,18 @@ function esc(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function mascararCpf(cpf) {
+  const limpo = String(cpf || '').replace(/\D/g, '');
+  if (limpo.length !== 11) return cpf || '—';
+  return `${limpo.slice(0, 3)}.***.***-${limpo.slice(-2)}`;
+}
+
+function formatarDataHora(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
 // ── ERROS FIREBASE ────────────────────────────────────────────────────────────
