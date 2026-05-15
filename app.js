@@ -1,4 +1,9 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
+import {
+  getMessaging,
+  getToken,
+  onMessage
+} from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js';
 import {
   getAuth,
   onAuthStateChanged,
@@ -44,11 +49,16 @@ const firebaseConfig = {
 
 const WHATSAPP_NUMBER = '5514997132879';
 
+// FCM — preencha com a VAPID key gerada em Firebase Console →
+// Project Settings → Cloud Messaging → Web Push certificates → Generate key pair
+const FCM_VAPID_KEY = '';
+
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
-const fbApp   = initializeApp(firebaseConfig);
-const auth    = getAuth(fbApp);
-const db      = getFirestore(fbApp);
-const storage = getStorage(fbApp);
+const fbApp     = initializeApp(firebaseConfig);
+const auth      = getAuth(fbApp);
+const db        = getFirestore(fbApp);
+const storage   = getStorage(fbApp);
+const messaging = getMessaging(fbApp);
 
 // ── ESTADO ───────────────────────────────────────────────────────────────────
 let isRegistering      = false;
@@ -181,10 +191,12 @@ onAuthStateChanged(auth, async (user) => {
         await carregarAdmin();
         mostrarAdminView();
         inicializarSino(user.uid, role);
+        configurarFCM(user.uid);
       } else if (role === 'dashboard') {
         await carregarDashboard();
         mostrarDashboardView();
         inicializarSino(user.uid, role);
+        configurarFCM(user.uid);
       } else if (role === 'vet2' || role === 'escritor') {
         window.location.replace('/guia/');
         return;
@@ -192,6 +204,7 @@ onAuthStateChanged(auth, async (user) => {
         await carregarDadosHome(user, data);
         mostrarHomeView();
         inicializarSino(user.uid, role);
+        configurarFCM(user.uid);
       } else {
         await signOut(auth);
         mostrarAuthView({
@@ -1171,6 +1184,56 @@ window.confirmarResgate = async function() {
   } finally {
     pararLoading(btn);
   }
+}
+
+// ── FCM PUSH NOTIFICATIONS ───────────────────────────────────────────────────
+async function configurarFCM(uid) {
+  if (!FCM_VAPID_KEY) return;
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
+  try {
+    const permissao = await Notification.requestPermission();
+    if (permissao !== 'granted') return;
+
+    const registration = await navigator.serviceWorker.ready;
+    const token = await getToken(messaging, {
+      vapidKey: FCM_VAPID_KEY,
+      serviceWorkerRegistration: registration
+    });
+    if (!token) return;
+
+    // Adiciona o token ao array sem duplicar e sem apagar tokens de outros dispositivos
+    const userRef  = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    const tokens   = userSnap.exists() ? (userSnap.data().fcmTokens || []) : [];
+    if (!tokens.includes(token)) {
+      await updateDoc(userRef, { fcmTokens: [...tokens, token] });
+    }
+
+    // Exibe notificações quando o app está em foreground
+    onMessage(messaging, (payload) => {
+      const { title, body } = payload.notification || {};
+      mostrarToastFCM(title, body);
+    });
+
+  } catch (err) {
+    console.error('FCM:', err);
+  }
+}
+
+function mostrarToastFCM(titulo, corpo) {
+  const toast = document.createElement('div');
+  toast.className = 'fcm-toast';
+  toast.innerHTML = `
+    <div class="fcm-toast__titulo">${esc(titulo || 'Notificação')}</div>
+    ${corpo ? `<div class="fcm-toast__corpo">${esc(corpo)}</div>` : ''}
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add('fcm-toast--visivel'), 50);
+  setTimeout(() => {
+    toast.classList.remove('fcm-toast--visivel');
+    setTimeout(() => toast.remove(), 400);
+  }, 5000);
 }
 
 // ── SINO E DRAWER DE NOTIFICAÇÕES ────────────────────────────────────────────
