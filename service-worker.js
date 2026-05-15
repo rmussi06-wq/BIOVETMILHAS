@@ -26,7 +26,7 @@ messaging.onBackgroundMessage(payload => {
 });
 
 // ── CACHE ─────────────────────────────────────────────────────────────────────
-const CACHE_NAME = 'biovet-v10';
+const CACHE_NAME = 'biovet-v11';
 
 const STATIC_ASSETS = [
   '/',
