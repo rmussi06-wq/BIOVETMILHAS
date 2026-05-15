@@ -1,6 +1,7 @@
 {
   "name": "Biovetfarma",
   "short_name": "Biovetfarma",
+  "scope": "/",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#FFFFFF",
