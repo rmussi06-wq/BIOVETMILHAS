@@ -349,7 +349,10 @@ resetForm?.addEventListener('submit', async (e) => {
 // ── LOGOUT ────────────────────────────────────────────────────────────────────
 logoutBtn?.addEventListener('click', () => signOut(auth));
 document.getElementById('admin-logout-btn')?.addEventListener('click', () => signOut(auth));
-document.getElementById('dashboard-logout-btn')?.addEventListener('click', () => signOut(auth));
+document.getElementById('dashboard-logout-btn')?.addEventListener('click', () => {
+  if (_unsubDashResgates) { _unsubDashResgates(); _unsubDashResgates = null; }
+  signOut(auth);
+});
 
 // ── HOME ──────────────────────────────────────────────────────────────────────
 async function carregarDadosHome(user, data) {
@@ -850,6 +853,76 @@ async function carregarDashboard() {
 
   // Slots carrosel
   await carregarSlotsCarrosel();
+
+  // Resgates solicitados por este dashboard
+  carregarResgatesDashboard();
+}
+
+// ── RESGATES DO DASHBOARD ─────────────────────────────────────────────────────
+let _unsubDashResgates = null;
+
+function carregarResgatesDashboard() {
+  if (_unsubDashResgates) { _unsubDashResgates(); _unsubDashResgates = null; }
+
+  const currentUser = auth.currentUser;
+  if (!currentUser) return;
+
+  const el = document.getElementById('dash-resgates-lista');
+  if (!el) return;
+
+  el.innerHTML = '<p class="empty-state">Carregando…</p>';
+
+  const q = query(
+    collection(db, 'resgates'),
+    where('solicitadoPor.uid', '==', currentUser.uid)
+  );
+
+  _unsubDashResgates = onSnapshot(q, snap => {
+    const resgates = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        const ta = a.solicitadoEm?.seconds ?? 0;
+        const tb = b.solicitadoEm?.seconds ?? 0;
+        return tb - ta;
+      });
+
+    if (!resgates.length) {
+      el.innerHTML = '<p class="empty-state">Nenhum resgate solicitado ainda.</p>';
+      return;
+    }
+
+    el.innerHTML = resgates.map(r => {
+      const finalizado  = r.status === 'finalizado';
+      const badgeClass  = finalizado ? 'badge-status--finalizado' : 'badge-status--pendente';
+      const badgeLabel  = finalizado ? 'Finalizado' : 'Pendente';
+      const data        = formatarDataHora(r.solicitadoEm);
+      const valor       = 'R$ ' + (r.valorReais || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+      return `
+        <div class="dash-resgate-card">
+          <div class="dash-resgate-card__top">
+            <span class="dash-resgate-vet">${esc(r.vetNome || '—')}</span>
+            <span class="badge-status ${badgeClass}">${badgeLabel}</span>
+          </div>
+          <div class="dash-resgate-card__info">
+            CRMV: ${esc(r.vetCrmv || '—')} &nbsp;·&nbsp;
+            ${(r.pontosResgatados || 0).toLocaleString('pt-BR')} pts &nbsp;·&nbsp; ${valor}
+          </div>
+          <div class="dash-resgate-card__info">
+            Protocolo: <strong>${esc(r.id.slice(0, 8).toUpperCase())}</strong>
+            &nbsp;·&nbsp; ${data}
+          </div>
+          ${finalizado && r.comprovanteUrl ? `
+            <a class="btn-ver-comprovante" href="${esc(r.comprovanteUrl)}" target="_blank" rel="noopener noreferrer">
+              📄 Ver comprovante
+            </a>` : ''}
+        </div>
+      `;
+    }).join('');
+  }, err => {
+    console.error('dash resgates:', err);
+    el.innerHTML = '<p class="empty-state">Erro ao carregar resgates.</p>';
+  });
 }
 
 function atualizarTextoCotacaoDash() {
@@ -1243,16 +1316,16 @@ function inicializarSino(uid, role) {
   // Encerra listener anterior se existir
   if (_unsubSino) { _unsubSino(); _unsubSino = null; }
 
+  // Sem orderBy para evitar exigência de índice composto no Firestore.
+  // A ordenação é feita client-side na função atualizar().
   const q = query(
     collection(db, 'notificacoes'),
-    where('destinatarioUid', '==', uid),
-    orderBy('criadaEm', 'desc')
+    where('destinatarioUid', '==', uid)
   );
   const qRole = query(
     collection(db, 'notificacoes'),
     where('destinatarioRole', '==', role),
-    where('destinatarioUid', '==', null),
-    orderBy('criadaEm', 'desc')
+    where('destinatarioUid', '==', null)
   );
 
   // Mantém cache local das notificações (por uid + por role)

@@ -1180,6 +1180,41 @@ input:focus {
 }
 
 /* CAROUSEL ADMIN */
+/* ── DASHBOARD — RESGATES ───────────────────────────────────────────────────── */
+.dash-resgates-section { margin-bottom: 28px; }
+
+.dash-resgates-lista {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.dash-resgate-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.dash-resgate-card__top {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.dash-resgate-vet  { font-weight: 700; font-size: 0.93rem; color: var(--text); }
+.dash-resgate-card__info { font-size: 0.82rem; color: var(--text-soft); }
+
+.btn-ver-comprovante {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 4px;
+  background: var(--teal);
+  color: #fff;
+  font-weight: 700; font-size: 0.82rem;
+  padding: 7px 14px;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  width: fit-content;
+  transition: background 0.15s;
+}
+.btn-ver-comprovante:hover { background: var(--teal-dark); }
+
 .carousel-admin-section {
   display: flex;
   flex-direction: column;
