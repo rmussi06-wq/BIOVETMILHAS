@@ -247,6 +247,7 @@ Em conexão rápida o usuário espera à toa. Idealmente esconder quando `onAuth
 - ✅ **Fase 2 (Fluxo de resgate + carrossel Storage) — CONCLUÍDA**
 - ✅ **Fase 3 (Notificações in-app + FCM push) — CONCLUÍDA**
 - ✅ **Fase 4 (Onboarding `/install` + letreiro de voos) — CONCLUÍDA**
+- ✅ **Correções pós-Fase 4 — CONCLUÍDAS** (manifest scope, botão Guia no cabeçalho, letreiro 48px/14px/120px)
 
 ## 8. ✅ Fase 1 — Correções e base (CONCLUÍDA)
 
@@ -564,5 +565,5 @@ if (isStandalone) {
 
 ---
 
-*Documento atualizado em maio de 2026. Última revisão: Fase 4 concluída — página /install (onboarding via QR Code, detecção de SO/navegador, design discreto), robots.txt, letreiro rolante de voos na home-view do vet. — notificações in-app (coleção Firestore, sino com badge, drawer lateral, onSnapshot em tempo real), FCM push (permissão, token, service worker, Cloud Function). Próximo passo: Fase 4 (página /install + letreiro de voos).*
+*Documento atualizado em maio de 2026. Última revisão: correções pós-Fase 4 — (1) `manifest.webmanifest` recebe `"scope": "/"` para garantir que o PWA instalado abra na raiz; (2) botão Guia de Prescrição movido do corpo da home para o cabeçalho como ícone de livro ao lado do sino (`.btn-icon-guia`), removido o antigo bloco de largura total; (3) letreiro de voos ajustado para height 48px, font-size 14px e gap 120px. — Fases 1–4 todas concluídas. Próximo passo: deploy das Cloud Functions (`firebase deploy --only functions --project biovet-parceiro-vet`) deve ser feito localmente pelo usuário após `firebase login`.*
 *Atualize esta linha e o checklist sempre que entregar uma fase.*
