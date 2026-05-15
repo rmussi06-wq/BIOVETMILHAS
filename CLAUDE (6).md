@@ -246,7 +246,7 @@ Em conexão rápida o usuário espera à toa. Idealmente esconder quando `onAuth
 - ✅ **Fase 1 (Correções e base) — CONCLUÍDA**
 - ✅ **Fase 2 (Fluxo de resgate + carrossel Storage) — CONCLUÍDA**
 - ✅ **Fase 3 (Notificações in-app + FCM push) — CONCLUÍDA**
-- 🔲 Fase 4 — Onboarding `/install` + letreiro de voos
+- ✅ **Fase 4 (Onboarding `/install` + letreiro de voos) — CONCLUÍDA**
 
 ## 8. ✅ Fase 1 — Correções e base (CONCLUÍDA)
 
@@ -420,7 +420,7 @@ Como o plano **Blaze já está habilitado**, dá pra implementar push real nesta
 
 **Limitação iOS:** push só funciona no iOS se o PWA foi **instalado** na tela inicial (iOS 16.4+).
 
-## 11. Fase 4 — Página `/install` + letreiro de voos
+## 11. ✅ Fase 4 — Página `/install` + letreiro de voos (CONCLUÍDA)
 
 ### 11.1. Página `/install` (anti-indexação)
 
@@ -553,7 +553,7 @@ if (isStandalone) {
 - [ ] Marcar **Enforce HTTPS** em Settings → Pages assim que o certificado for emitido (24-48h)
 - [x] Fase 2 — Fluxo de resgate completo + carrossel no Storage
 - [x] Fase 3 — Notificações in-app + FCM push real (Blaze ativo)
-- [ ] Fase 4 — Página `/install` + letreiro de voos
+- [x] Fase 4 — Página `/install` + letreiro de voos
 
 ### Qualidade de código (não urgente)
 - [ ] Substituir `alert`/`confirm` pelos modais do design system
@@ -564,5 +564,5 @@ if (isStandalone) {
 
 ---
 
-*Documento atualizado em maio de 2026. Última revisão: Fase 3 concluída — notificações in-app (coleção Firestore, sino com badge, drawer lateral, onSnapshot em tempo real), FCM push (permissão, token, service worker, Cloud Function). Próximo passo: Fase 4 (página /install + letreiro de voos).*
+*Documento atualizado em maio de 2026. Última revisão: Fase 4 concluída — página /install (onboarding via QR Code, detecção de SO/navegador, design discreto), robots.txt, letreiro rolante de voos na home-view do vet. — notificações in-app (coleção Firestore, sino com badge, drawer lateral, onSnapshot em tempo real), FCM push (permissão, token, service worker, Cloud Function). Próximo passo: Fase 4 (página /install + letreiro de voos).*
 *Atualize esta linha e o checklist sempre que entregar uma fase.*
