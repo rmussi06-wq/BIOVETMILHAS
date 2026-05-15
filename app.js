@@ -42,15 +42,6 @@ const firebaseConfig = {
   appId:             "1:549792200166:web:0cf14a3895227b79031227"
 };
 
-// EmailJS — preencha para ativar notificações de novos cadastros por e-mail
-// 1. Crie conta em https://www.emailjs.com/
-// 2. Crie um serviço de e-mail e um template com variáveis: {{vet_name}}, {{vet_crmv}}, {{vet_email}}
-// 3. Preencha as constantes abaixo com seus IDs
-const EMAILJS_SERVICE_ID  = '';   // ex: 'service_abc123'
-const EMAILJS_TEMPLATE_ID = '';   // ex: 'template_xyz456'
-const EMAILJS_PUBLIC_KEY  = '';   // ex: 'user_AbCdEfGhIj...'
-const NOTIFICATION_EMAIL  = '';   // e-mail que receberá os avisos
-
 const WHATSAPP_NUMBER = '5514997132879';
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
@@ -67,6 +58,7 @@ let carouselImages     = [];
 let carouselIndex      = 0;
 let carouselTimer      = null;
 let dashCotacao        = { pontosBase: 1000, valorReais: 15 };
+let _usuarioAtual      = null;  // { uid, role, nome } — preenchido no onAuthStateChanged
 
 // ── ELEMENTOS ─────────────────────────────────────────────────────────────────
 const authView      = document.getElementById('auth-view');
@@ -183,18 +175,23 @@ onAuthStateChanged(auth, async (user) => {
       const data = snap.data();
       const role  = (data.role || '').trim();
 
+      _usuarioAtual = { uid: user.uid, role, nome: data.nome || user.email };
+
       if (role === 'admin') {
         await carregarAdmin();
         mostrarAdminView();
+        inicializarSino(user.uid, role);
       } else if (role === 'dashboard') {
         await carregarDashboard();
         mostrarDashboardView();
+        inicializarSino(user.uid, role);
       } else if (role === 'vet2' || role === 'escritor') {
         window.location.replace('/guia/');
         return;
       } else if (data.approved === true) {
         await carregarDadosHome(user, data);
         mostrarHomeView();
+        inicializarSino(user.uid, role);
       } else {
         await signOut(auth);
         mostrarAuthView({
@@ -282,15 +279,14 @@ registerForm?.addEventListener('submit', async (e) => {
       criadoEm: new Date().toISOString()
     });
 
-    // Notificação por e-mail via EmailJS
-    if (EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
-      window.emailjs?.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email:  NOTIFICATION_EMAIL,
-        vet_name:  nome,
-        vet_crmv:  crmv,
-        vet_email: email,
-      }, EMAILJS_PUBLIC_KEY).catch(err => console.error('EmailJS:', err));
-    }
+    // Notifica todos os admins sobre novo cadastro pendente
+    await criarNotificacao({
+      destinatarioRole: 'admin',
+      tipo:     'novo_cadastro',
+      titulo:   'Novo cadastro aguardando aprovação',
+      mensagem: `${nome} (CRMV ${crmv}) se cadastrou e aguarda aprovação.`,
+      metadata: { vetNome: nome, vetCrmv: crmv, vetEmail: email }
+    });
 
     await new Promise(r => setTimeout(r, 400));
     await signOut(auth);
@@ -552,6 +548,17 @@ async function salvarPontosModal() {
     const u = adminAllUsers.find(u => u.uid === currentEditUid);
     if (u) u.pontos = val;
     renderAdminUsers(document.getElementById('admin-search')?.value.trim().toLowerCase() || '');
+
+    // Notifica o veterinário que seus pontos foram atualizados
+    await criarNotificacao({
+      destinatarioUid:  currentEditUid,
+      destinatarioRole: 'vet',
+      tipo:     'pontos_atualizados',
+      titulo:   'Sua pontuação foi atualizada',
+      mensagem: `Seu saldo foi atualizado para ${val.toLocaleString('pt-BR')} pontos.`,
+      metadata: { novoPontos: val }
+    });
+
     fecharModal();
   } catch (err) {
     console.error(err);
@@ -567,6 +574,18 @@ window.toggleAprovacao = async function(uid, aprovar) {
     const u = adminAllUsers.find(u => u.uid === uid);
     if (u) u.approved = aprovar;
     renderAdminUsers(document.getElementById('admin-search')?.value.trim().toLowerCase() || '');
+
+    // Notifica o veterinário sobre aprovação ou revogação
+    if (aprovar) {
+      await criarNotificacao({
+        destinatarioUid:  uid,
+        destinatarioRole: 'vet',
+        tipo:     'cadastro_aprovado',
+        titulo:   'Cadastro aprovado!',
+        mensagem: 'Seu cadastro no Biovet Pontos foi aprovado. Bem-vindo!',
+        metadata: { vetUid: uid }
+      });
+    }
   } catch (err) {
     console.error(err);
     alert('Erro ao atualizar aprovação. Tente novamente.');
@@ -756,6 +775,28 @@ window.confirmarFinalizarResgate = async function() {
         ...(comprovanteUrl ? { comprovanteUrl } : {})
       });
     });
+
+    // Notifica o veterinário que o resgate foi finalizado
+    await criarNotificacao({
+      destinatarioUid:  resgate.vetUid,
+      destinatarioRole: 'vet',
+      tipo:     'resgate_finalizado',
+      titulo:   'Resgate de pontos finalizado',
+      mensagem: `Seu resgate de ${(resgate.pontosResgatados || 0).toLocaleString('pt-BR')} pts foi processado com sucesso.`,
+      metadata: { resgateId: rid, pontosResgatados: resgate.pontosResgatados }
+    });
+
+    // Notifica o dashboard que solicitou o resgate
+    if (resgate.solicitadoPor?.uid) {
+      await criarNotificacao({
+        destinatarioUid:  resgate.solicitadoPor.uid,
+        destinatarioRole: 'dashboard',
+        tipo:     'resgate_finalizado',
+        titulo:   'Resgate finalizado pelo admin',
+        mensagem: `O resgate de ${(resgate.pontosResgatados || 0).toLocaleString('pt-BR')} pts de ${resgate.vetNome} foi aprovado.`,
+        metadata: { resgateId: rid, vetNome: resgate.vetNome }
+      });
+    }
 
     mostrarMensagem(msgEl, 'Resgate finalizado com sucesso!', 'success');
     setTimeout(() => {
@@ -1100,6 +1141,15 @@ window.confirmarResgate = async function() {
       finalizadoPor:    null,
     });
 
+    // Notifica todos os admins sobre novo resgate pendente
+    await criarNotificacao({
+      destinatarioRole: 'admin',
+      tipo:     'novo_resgate',
+      titulo:   'Nova solicitação de resgate',
+      mensagem: `${resgateAtual.vetNome} solicitou ${pontosResgatados.toLocaleString('pt-BR')} pts (R$ ${valorReais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}).`,
+      metadata: { resgateId: docRef.id, vetUid: resgateAtual.vetUid, pontosResgatados, valorReais }
+    });
+
     // Salva dados antes de fecharModalResgate() — que zera resgateAtual
     const { vetNome, vetCrmv, vetCpf } = resgateAtual;
     const cotacaoSnapshot = { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais };
@@ -1120,6 +1170,27 @@ window.confirmarResgate = async function() {
     mostrarMensagem(msgEl, 'Erro ao registrar resgate. Tente novamente.', 'error');
   } finally {
     pararLoading(btn);
+  }
+}
+
+// ── NOTIFICAÇÕES IN-APP ───────────────────────────────────────────────────────
+// Grava um documento em /notificacoes.
+// Se destinatarioUid for fornecido, notifica aquele usuário específico.
+// Se apenas destinatarioRole, notifica todos da role via broadcast.
+async function criarNotificacao({ destinatarioUid = null, destinatarioRole, tipo, titulo, mensagem, metadata = {} }) {
+  try {
+    await addDoc(collection(db, 'notificacoes'), {
+      destinatarioUid,
+      destinatarioRole,
+      tipo,
+      titulo,
+      mensagem,
+      lida: false,
+      criadaEm: serverTimestamp(),
+      metadata
+    });
+  } catch (err) {
+    console.error('criarNotificacao:', err);
   }
 }
 
