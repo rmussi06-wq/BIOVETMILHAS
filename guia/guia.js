@@ -402,11 +402,12 @@ async function carregarTodosPublicados() {
   try {
     const q    = query(
       collection(db, 'livro', 'medicamentos'),
-      where('status', '==', 'publicado'),
-      orderBy('nomeComercial')
+      where('status', '==', 'publicado')
     );
     const snap = await getDocs(q);
-    _todosPublicados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    _todosPublicados = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.nomeComercial || '').localeCompare(b.nomeComercial || '', 'pt-BR'));
     renderizarSidebarLeitura(_todosPublicados);
   } catch (err) {
     console.error(err);
@@ -910,6 +911,7 @@ ${textoOrig}`;
       body:    JSON.stringify({ contents: [{ parts }] })
     });
 
+    if (res.status === 429) throw new Error('__429__');
     if (!res.ok) throw new Error(`Gemini API: ${res.status}`);
     const json = await res.json();
     _iaSugestao = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -924,7 +926,10 @@ ${textoOrig}`;
   } catch (err) {
     console.error(err);
     document.getElementById('ia-loading').style.display = 'none';
-    mostrarMsg(document.getElementById('ia-msg'), `Erro ao consultar IA: ${err.message}`, 'error');
+    const msg = err.message === '__429__'
+      ? 'Assistente temporariamente indisponível. Tente novamente em alguns minutos.'
+      : `Erro ao consultar IA: ${err.message}`;
+    mostrarMsg(document.getElementById('ia-msg'), msg, 'error');
   }
 };
 
