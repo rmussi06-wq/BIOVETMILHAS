@@ -29,7 +29,7 @@ const firebaseConfig = {
   appId:             "1:549792200166:web:0cf14a3895227b79031227"
 };
 
-const GEMINI_API_KEY = '';   // Preencha com sua chave da Gemini API
+const GEMINI_API_KEY = 'AIzaSyBPuz3oZB-R0mtOIW7xRXNa9h53WOrCy14';
 const GEMINI_URL     = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
