@@ -245,7 +245,7 @@ Em conexão rápida o usuário espera à toa. Idealmente esconder quando `onAuth
 
 - ✅ **Fase 1 (Correções e base) — CONCLUÍDA**
 - ✅ **Fase 2 (Fluxo de resgate + carrossel Storage) — CONCLUÍDA**
-- 🔲 Fase 3 — Notificações in-app + FCM push (plano Blaze já ativo)
+- ✅ **Fase 3 (Notificações in-app + FCM push) — CONCLUÍDA**
 - 🔲 Fase 4 — Onboarding `/install` + letreiro de voos
 
 ## 8. ✅ Fase 1 — Correções e base (CONCLUÍDA)
@@ -360,7 +360,7 @@ Terceira aba no admin com duas seções: **Pendentes** e **Histórico**.
 
 Upload migrado para Firebase Storage. UI compacta mostra status Ativa/Vazia + botões Substituir/Remover por slot.
 
-## 10. Fase 3 — Notificações in-app + FCM push real
+## 10. ✅ Fase 3 — Notificações in-app + FCM push real (CONCLUÍDA)
 
 ### 10.1. Coleção `notificacoes` + sino
 
@@ -552,7 +552,7 @@ if (isStandalone) {
 - [ ] Após substituir os ícones, pedir ao Claude Code para incrementar `CACHE_NAME` de v8 para v9
 - [ ] Marcar **Enforce HTTPS** em Settings → Pages assim que o certificado for emitido (24-48h)
 - [x] Fase 2 — Fluxo de resgate completo + carrossel no Storage
-- [ ] Fase 3 — Notificações in-app + FCM push real (Blaze ativo)
+- [x] Fase 3 — Notificações in-app + FCM push real (Blaze ativo)
 - [ ] Fase 4 — Página `/install` + letreiro de voos
 
 ### Qualidade de código (não urgente)
@@ -564,5 +564,5 @@ if (isStandalone) {
 
 ---
 
-*Documento atualizado em maio de 2026. Última revisão: Fase 2 concluída — fluxo de resgate, comprovante A4, aba Resgates no admin, carrossel migrado para Firebase Storage. Próximo passo: Fase 3 (notificações in-app + FCM push).*
+*Documento atualizado em maio de 2026. Última revisão: Fase 3 concluída — notificações in-app (coleção Firestore, sino com badge, drawer lateral, onSnapshot em tempo real), FCM push (permissão, token, service worker, Cloud Function). Próximo passo: Fase 4 (página /install + letreiro de voos).*
 *Atualize esta linha e o checklist sempre que entregar uma fase.*

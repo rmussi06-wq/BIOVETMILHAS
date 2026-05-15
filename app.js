@@ -1,4 +1,9 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
+import {
+  getMessaging,
+  getToken,
+  onMessage
+} from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js';
 import {
   getAuth,
   onAuthStateChanged,
@@ -42,22 +47,18 @@ const firebaseConfig = {
   appId:             "1:549792200166:web:0cf14a3895227b79031227"
 };
 
-// EmailJS — preencha para ativar notificações de novos cadastros por e-mail
-// 1. Crie conta em https://www.emailjs.com/
-// 2. Crie um serviço de e-mail e um template com variáveis: {{vet_name}}, {{vet_crmv}}, {{vet_email}}
-// 3. Preencha as constantes abaixo com seus IDs
-const EMAILJS_SERVICE_ID  = '';   // ex: 'service_abc123'
-const EMAILJS_TEMPLATE_ID = '';   // ex: 'template_xyz456'
-const EMAILJS_PUBLIC_KEY  = '';   // ex: 'user_AbCdEfGhIj...'
-const NOTIFICATION_EMAIL  = '';   // e-mail que receberá os avisos
-
 const WHATSAPP_NUMBER = '5514997132879';
 
+// FCM — preencha com a VAPID key gerada em Firebase Console →
+// Project Settings → Cloud Messaging → Web Push certificates → Generate key pair
+const FCM_VAPID_KEY = '';
+
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
-const fbApp   = initializeApp(firebaseConfig);
-const auth    = getAuth(fbApp);
-const db      = getFirestore(fbApp);
-const storage = getStorage(fbApp);
+const fbApp     = initializeApp(firebaseConfig);
+const auth      = getAuth(fbApp);
+const db        = getFirestore(fbApp);
+const storage   = getStorage(fbApp);
+const messaging = getMessaging(fbApp);
 
 // ── ESTADO ───────────────────────────────────────────────────────────────────
 let isRegistering      = false;
@@ -67,6 +68,7 @@ let carouselImages     = [];
 let carouselIndex      = 0;
 let carouselTimer      = null;
 let dashCotacao        = { pontosBase: 1000, valorReais: 15 };
+let _usuarioAtual      = null;  // { uid, role, nome } — preenchido no onAuthStateChanged
 
 // ── ELEMENTOS ─────────────────────────────────────────────────────────────────
 const authView      = document.getElementById('auth-view');
@@ -183,15 +185,26 @@ onAuthStateChanged(auth, async (user) => {
       const data = snap.data();
       const role  = (data.role || '').trim();
 
+      _usuarioAtual = { uid: user.uid, role, nome: data.nome || user.email };
+
       if (role === 'admin') {
         await carregarAdmin();
         mostrarAdminView();
+        inicializarSino(user.uid, role);
+        configurarFCM(user.uid);
       } else if (role === 'dashboard') {
         await carregarDashboard();
         mostrarDashboardView();
+        inicializarSino(user.uid, role);
+        configurarFCM(user.uid);
+      } else if (role === 'vet2' || role === 'escritor') {
+        window.location.replace('/guia/');
+        return;
       } else if (data.approved === true) {
         await carregarDadosHome(user, data);
         mostrarHomeView();
+        inicializarSino(user.uid, role);
+        configurarFCM(user.uid);
       } else {
         await signOut(auth);
         mostrarAuthView({
@@ -279,15 +292,14 @@ registerForm?.addEventListener('submit', async (e) => {
       criadoEm: new Date().toISOString()
     });
 
-    // Notificação por e-mail via EmailJS
-    if (EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
-      window.emailjs?.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email:  NOTIFICATION_EMAIL,
-        vet_name:  nome,
-        vet_crmv:  crmv,
-        vet_email: email,
-      }, EMAILJS_PUBLIC_KEY).catch(err => console.error('EmailJS:', err));
-    }
+    // Notifica todos os admins sobre novo cadastro pendente
+    await criarNotificacao({
+      destinatarioRole: 'admin',
+      tipo:     'novo_cadastro',
+      titulo:   'Novo cadastro aguardando aprovação',
+      mensagem: `${nome} (CRMV ${crmv}) se cadastrou e aguarda aprovação.`,
+      metadata: { vetNome: nome, vetCrmv: crmv, vetEmail: email }
+    });
 
     await new Promise(r => setTimeout(r, 400));
     await signOut(auth);
@@ -549,6 +561,17 @@ async function salvarPontosModal() {
     const u = adminAllUsers.find(u => u.uid === currentEditUid);
     if (u) u.pontos = val;
     renderAdminUsers(document.getElementById('admin-search')?.value.trim().toLowerCase() || '');
+
+    // Notifica o veterinário que seus pontos foram atualizados
+    await criarNotificacao({
+      destinatarioUid:  currentEditUid,
+      destinatarioRole: 'vet',
+      tipo:     'pontos_atualizados',
+      titulo:   'Sua pontuação foi atualizada',
+      mensagem: `Seu saldo foi atualizado para ${val.toLocaleString('pt-BR')} pontos.`,
+      metadata: { novoPontos: val }
+    });
+
     fecharModal();
   } catch (err) {
     console.error(err);
@@ -564,6 +587,18 @@ window.toggleAprovacao = async function(uid, aprovar) {
     const u = adminAllUsers.find(u => u.uid === uid);
     if (u) u.approved = aprovar;
     renderAdminUsers(document.getElementById('admin-search')?.value.trim().toLowerCase() || '');
+
+    // Notifica o veterinário sobre aprovação ou revogação
+    if (aprovar) {
+      await criarNotificacao({
+        destinatarioUid:  uid,
+        destinatarioRole: 'vet',
+        tipo:     'cadastro_aprovado',
+        titulo:   'Cadastro aprovado!',
+        mensagem: 'Seu cadastro no Biovet Pontos foi aprovado. Bem-vindo!',
+        metadata: { vetUid: uid }
+      });
+    }
   } catch (err) {
     console.error(err);
     alert('Erro ao atualizar aprovação. Tente novamente.');
@@ -753,6 +788,28 @@ window.confirmarFinalizarResgate = async function() {
         ...(comprovanteUrl ? { comprovanteUrl } : {})
       });
     });
+
+    // Notifica o veterinário que o resgate foi finalizado
+    await criarNotificacao({
+      destinatarioUid:  resgate.vetUid,
+      destinatarioRole: 'vet',
+      tipo:     'resgate_finalizado',
+      titulo:   'Resgate de pontos finalizado',
+      mensagem: `Seu resgate de ${(resgate.pontosResgatados || 0).toLocaleString('pt-BR')} pts foi processado com sucesso.`,
+      metadata: { resgateId: rid, pontosResgatados: resgate.pontosResgatados }
+    });
+
+    // Notifica o dashboard que solicitou o resgate
+    if (resgate.solicitadoPor?.uid) {
+      await criarNotificacao({
+        destinatarioUid:  resgate.solicitadoPor.uid,
+        destinatarioRole: 'dashboard',
+        tipo:     'resgate_finalizado',
+        titulo:   'Resgate finalizado pelo admin',
+        mensagem: `O resgate de ${(resgate.pontosResgatados || 0).toLocaleString('pt-BR')} pts de ${resgate.vetNome} foi aprovado.`,
+        metadata: { resgateId: rid, vetNome: resgate.vetNome }
+      });
+    }
 
     mostrarMensagem(msgEl, 'Resgate finalizado com sucesso!', 'success');
     setTimeout(() => {
@@ -1097,6 +1154,15 @@ window.confirmarResgate = async function() {
       finalizadoPor:    null,
     });
 
+    // Notifica todos os admins sobre novo resgate pendente
+    await criarNotificacao({
+      destinatarioRole: 'admin',
+      tipo:     'novo_resgate',
+      titulo:   'Nova solicitação de resgate',
+      mensagem: `${resgateAtual.vetNome} solicitou ${pontosResgatados.toLocaleString('pt-BR')} pts (R$ ${valorReais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}).`,
+      metadata: { resgateId: docRef.id, vetUid: resgateAtual.vetUid, pontosResgatados, valorReais }
+    });
+
     // Salva dados antes de fecharModalResgate() — que zera resgateAtual
     const { vetNome, vetCrmv, vetCpf } = resgateAtual;
     const cotacaoSnapshot = { pontosBase: dashCotacao.pontosBase, valorReais: dashCotacao.valorReais };
@@ -1117,6 +1183,201 @@ window.confirmarResgate = async function() {
     mostrarMensagem(msgEl, 'Erro ao registrar resgate. Tente novamente.', 'error');
   } finally {
     pararLoading(btn);
+  }
+}
+
+// ── FCM PUSH NOTIFICATIONS ───────────────────────────────────────────────────
+async function configurarFCM(uid) {
+  if (!FCM_VAPID_KEY) return;
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
+  try {
+    const permissao = await Notification.requestPermission();
+    if (permissao !== 'granted') return;
+
+    const registration = await navigator.serviceWorker.ready;
+    const token = await getToken(messaging, {
+      vapidKey: FCM_VAPID_KEY,
+      serviceWorkerRegistration: registration
+    });
+    if (!token) return;
+
+    // Adiciona o token ao array sem duplicar e sem apagar tokens de outros dispositivos
+    const userRef  = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    const tokens   = userSnap.exists() ? (userSnap.data().fcmTokens || []) : [];
+    if (!tokens.includes(token)) {
+      await updateDoc(userRef, { fcmTokens: [...tokens, token] });
+    }
+
+    // Exibe notificações quando o app está em foreground
+    onMessage(messaging, (payload) => {
+      const { title, body } = payload.notification || {};
+      mostrarToastFCM(title, body);
+    });
+
+  } catch (err) {
+    console.error('FCM:', err);
+  }
+}
+
+function mostrarToastFCM(titulo, corpo) {
+  const toast = document.createElement('div');
+  toast.className = 'fcm-toast';
+  toast.innerHTML = `
+    <div class="fcm-toast__titulo">${esc(titulo || 'Notificação')}</div>
+    ${corpo ? `<div class="fcm-toast__corpo">${esc(corpo)}</div>` : ''}
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add('fcm-toast--visivel'), 50);
+  setTimeout(() => {
+    toast.classList.remove('fcm-toast--visivel');
+    setTimeout(() => toast.remove(), 400);
+  }, 5000);
+}
+
+// ── SINO E DRAWER DE NOTIFICAÇÕES ────────────────────────────────────────────
+let _unsubSino = null;  // listener onSnapshot do sino
+
+function inicializarSino(uid, role) {
+  // Encerra listener anterior se existir
+  if (_unsubSino) { _unsubSino(); _unsubSino = null; }
+
+  const q = query(
+    collection(db, 'notificacoes'),
+    where('destinatarioUid', '==', uid),
+    orderBy('criadaEm', 'desc')
+  );
+  const qRole = query(
+    collection(db, 'notificacoes'),
+    where('destinatarioRole', '==', role),
+    where('destinatarioUid', '==', null),
+    orderBy('criadaEm', 'desc')
+  );
+
+  // Mantém cache local das notificações (por uid + por role)
+  let notifPorUid  = [];
+  let notifPorRole = [];
+
+  function atualizar() {
+    const todas = [...notifPorUid, ...notifPorRole]
+      .sort((a, b) => {
+        const ta = a.criadaEm?.seconds ?? 0;
+        const tb = b.criadaEm?.seconds ?? 0;
+        return tb - ta;
+      })
+      .slice(0, 20);
+    atualizarBadgeSino(todas.filter(n => !n.lida).length);
+    renderizarDrawer(todas);
+  }
+
+  const unsubUid = onSnapshot(q, snap => {
+    notifPorUid = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    atualizar();
+  }, err => console.error('sino uid:', err));
+
+  const unsubRole = onSnapshot(qRole, snap => {
+    notifPorRole = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    atualizar();
+  }, err => console.error('sino role:', err));
+
+  _unsubSino = () => { unsubUid(); unsubRole(); };
+}
+
+function atualizarBadgeSino(count) {
+  document.querySelectorAll('.sino-badge').forEach(badge => {
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  });
+}
+
+function renderizarDrawer(notifs) {
+  const lista = document.getElementById('notif-lista');
+  if (!lista) return;
+
+  if (!notifs.length) {
+    lista.innerHTML = '<div class="notif-vazia">Nenhuma notificação</div>';
+    return;
+  }
+
+  lista.innerHTML = notifs.map(n => `
+    <div class="notif-item${n.lida ? '' : ' notif-item--nao-lida'}" data-id="${esc(n._id)}">
+      <div class="notif-item__icone">${iconePorTipo(n.tipo)}</div>
+      <div class="notif-item__corpo">
+        <div class="notif-item__titulo">${esc(n.titulo || '')}</div>
+        <div class="notif-item__msg">${esc(n.mensagem || '')}</div>
+        <div class="notif-item__tempo">${formatarTempoAtras(n.criadaEm)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function iconePorTipo(tipo) {
+  const mapa = {
+    novo_cadastro:       '👤',
+    cadastro_aprovado:   '✅',
+    pontos_atualizados:  '⭐',
+    novo_resgate:        '💰',
+    resgate_finalizado:  '🎉',
+  };
+  return mapa[tipo] || '🔔';
+}
+
+function formatarTempoAtras(ts) {
+  if (!ts) return '';
+  const d   = ts.toDate ? ts.toDate() : new Date(ts);
+  const seg = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (seg < 60)    return 'agora';
+  if (seg < 3600)  return `${Math.floor(seg / 60)} min atrás`;
+  if (seg < 86400) return `${Math.floor(seg / 3600)} h atrás`;
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+async function marcarTodasLidas(ids) {
+  if (!ids?.length) return;
+  const batch = [];
+  ids.forEach(id => {
+    batch.push(updateDoc(doc(db, 'notificacoes', id), { lida: true }));
+  });
+  await Promise.all(batch).catch(err => console.error('marcarLidas:', err));
+}
+
+window.abrirDrawerNotif = function abrirDrawerNotif() {
+  const drawer    = document.getElementById('notif-drawer');
+  const backdrop  = document.getElementById('notif-backdrop');
+  if (!drawer) return;
+  drawer.classList.add('notif-drawer--aberto');
+  backdrop.classList.add('notif-backdrop--visivel');
+
+  // Marca como lidas as não lidas visíveis
+  const naoLidas = [...document.querySelectorAll('.notif-item--nao-lida')];
+  const ids = naoLidas.map(el => el.dataset.id).filter(Boolean);
+  if (ids.length) setTimeout(() => marcarTodasLidas(ids), 600);
+}
+
+window.fecharDrawerNotif = function() {
+  document.getElementById('notif-drawer')?.classList.remove('notif-drawer--aberto');
+  document.getElementById('notif-backdrop')?.classList.remove('notif-backdrop--visivel');
+};
+
+// ── NOTIFICAÇÕES IN-APP ───────────────────────────────────────────────────────
+// Grava um documento em /notificacoes.
+// Se destinatarioUid for fornecido, notifica aquele usuário específico.
+// Se apenas destinatarioRole, notifica todos da role via broadcast.
+async function criarNotificacao({ destinatarioUid = null, destinatarioRole, tipo, titulo, mensagem, metadata = {} }) {
+  try {
+    await addDoc(collection(db, 'notificacoes'), {
+      destinatarioUid,
+      destinatarioRole,
+      tipo,
+      titulo,
+      mensagem,
+      lida: false,
+      criadaEm: serverTimestamp(),
+      metadata
+    });
+  } catch (err) {
+    console.error('criarNotificacao:', err);
   }
 }
 

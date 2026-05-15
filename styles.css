@@ -380,6 +380,27 @@ input:focus {
 .btn-whatsapp:active { box-shadow: 0 2px 0 #0e6b5e; transform: translateY(2px); }
 .btn-whatsapp:hover  { filter: brightness(1.05); }
 
+.btn-guia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--teal-deep), 0 6px 20px rgba(60,179,192,0.25);
+  width: 100%;
+  min-height: 52px;
+  border-radius: var(--r-pill);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  margin-bottom: 12px;
+  transition: filter 0.15s;
+}
+.btn-guia:active { box-shadow: 0 2px 0 var(--teal-deep); transform: translateY(2px); }
+.btn-guia:hover  { filter: brightness(1.07); }
+
 .btn-icon-logout {
   display: flex;
   align-items: center;
@@ -395,6 +416,103 @@ input:focus {
 }
 .btn-icon-logout:hover  { color: var(--danger); border-color: #ffd0d0; background: #fff5f5; }
 .btn-icon-logout:active { transform: scale(0.92); }
+
+/* ── SINO ──────────────────────────────────────────────────────────────────── */
+.btn-icon-sino {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px;
+  border-radius: var(--r-md);
+  border: 2px solid var(--border-light);
+  background: var(--surface);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, transform 0.12s, border-color 0.15s;
+}
+.btn-icon-sino:hover  { color: var(--teal-dark); border-color: var(--border); background: var(--surface-alt); }
+.btn-icon-sino:active { transform: scale(0.92); }
+
+.sino-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--danger, #e53e3e);
+  color: #fff;
+  font-size: 0.6rem; font-weight: 800; font-family: var(--font);
+  min-width: 16px; height: 16px;
+  border-radius: 20px;
+  padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--surface);
+  line-height: 1;
+}
+
+/* ── DRAWER DE NOTIFICAÇÕES ──────────────────────────────────────────────── */
+.notif-backdrop {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(20,90,94,0.25);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.notif-backdrop--visivel { opacity: 1; pointer-events: auto; }
+
+.notif-drawer {
+  position: fixed; top: 0; right: 0;
+  height: 100vh; width: 340px; max-width: 95vw;
+  background: var(--surface);
+  box-shadow: -4px 0 24px rgba(20,90,94,0.12);
+  z-index: 401;
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+.notif-drawer--aberto { transform: translateX(0); }
+
+.notif-drawer__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.notif-drawer__titulo { font-weight: 800; font-size: 0.95rem; color: var(--text); }
+.notif-drawer__fechar {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.5rem; color: var(--text-muted); line-height: 1; padding: 0 4px;
+}
+.notif-drawer__fechar:hover { color: var(--text); }
+
+.notif-lista { flex: 1; overflow-y: auto; }
+
+.notif-vazia {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.notif-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.12s;
+}
+.notif-item:hover { background: var(--bg); }
+.notif-item--nao-lida { background: #f0f9fa; }
+.notif-item--nao-lida:hover { background: #e6f5f7; }
+
+.notif-item__icone {
+  font-size: 1.3rem; flex-shrink: 0; margin-top: 1px;
+  width: 32px; text-align: center;
+}
+.notif-item__corpo { flex: 1; min-width: 0; }
+.notif-item__titulo {
+  font-weight: 700; font-size: 0.85rem;
+  color: var(--text); margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.notif-item__msg {
+  font-size: 0.8rem; color: var(--text-soft);
+  line-height: 1.45; margin-bottom: 4px;
+}
+.notif-item__tempo { font-size: 0.72rem; color: var(--text-muted); }
 
 /* ════════════════════════════════
    HOME VIEW
@@ -1371,6 +1489,24 @@ input:focus {
   transition: filter 0.12s;
 }
 #sw-update-btn:hover { filter: brightness(0.95); }
+
+/* ── TOAST FCM (foreground push) ─────────────────────────────────────────── */
+.fcm-toast {
+  position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  padding: 14px 18px;
+  min-width: 260px; max-width: 360px;
+  z-index: 9000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+.fcm-toast--visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
+.fcm-toast__titulo  { font-weight: 800; font-size: 0.88rem; color: var(--text); margin-bottom: 3px; }
+.fcm-toast__corpo   { font-size: 0.82rem; color: var(--text-soft); line-height: 1.4; }
 
 /* ════════════════════════════════
    ANIMAÇÕES
