@@ -401,6 +401,32 @@ input:focus {
 .btn-guia:active { box-shadow: 0 2px 0 var(--teal-deep); transform: translateY(2px); }
 .btn-guia:hover  { filter: brightness(1.07); }
 
+/* ── LETREIRO DE VOOS ────────────────────────────────────────────────────── */
+.flight-board {
+  height: 38px;
+  overflow: hidden;
+  background: #0a1a1c;
+  color: #d4a437;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+  border-radius: var(--r-sm);
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+.flight-board-track {
+  display: flex;
+  gap: 80px;
+  animation: scrollFlights 45s linear infinite;
+  white-space: nowrap;
+}
+@keyframes scrollFlights {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 .btn-icon-logout {
   display: flex;
   align-items: center;
