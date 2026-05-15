@@ -1,4 +1,4 @@
-const CACHE_NAME = 'biovet-v9';
+const CACHE_NAME = 'biovet-v10';
 
 const STATIC_ASSETS = [
   '/',

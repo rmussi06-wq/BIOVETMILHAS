@@ -1173,6 +1173,130 @@ window.confirmarResgate = async function() {
   }
 }
 
+// ── SINO E DRAWER DE NOTIFICAÇÕES ────────────────────────────────────────────
+let _unsubSino = null;  // listener onSnapshot do sino
+
+function inicializarSino(uid, role) {
+  // Encerra listener anterior se existir
+  if (_unsubSino) { _unsubSino(); _unsubSino = null; }
+
+  const q = query(
+    collection(db, 'notificacoes'),
+    where('destinatarioUid', '==', uid),
+    orderBy('criadaEm', 'desc')
+  );
+  const qRole = query(
+    collection(db, 'notificacoes'),
+    where('destinatarioRole', '==', role),
+    where('destinatarioUid', '==', null),
+    orderBy('criadaEm', 'desc')
+  );
+
+  // Mantém cache local das notificações (por uid + por role)
+  let notifPorUid  = [];
+  let notifPorRole = [];
+
+  function atualizar() {
+    const todas = [...notifPorUid, ...notifPorRole]
+      .sort((a, b) => {
+        const ta = a.criadaEm?.seconds ?? 0;
+        const tb = b.criadaEm?.seconds ?? 0;
+        return tb - ta;
+      })
+      .slice(0, 20);
+    atualizarBadgeSino(todas.filter(n => !n.lida).length);
+    renderizarDrawer(todas);
+  }
+
+  const unsubUid = onSnapshot(q, snap => {
+    notifPorUid = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    atualizar();
+  }, err => console.error('sino uid:', err));
+
+  const unsubRole = onSnapshot(qRole, snap => {
+    notifPorRole = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    atualizar();
+  }, err => console.error('sino role:', err));
+
+  _unsubSino = () => { unsubUid(); unsubRole(); };
+}
+
+function atualizarBadgeSino(count) {
+  document.querySelectorAll('.sino-badge').forEach(badge => {
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  });
+}
+
+function renderizarDrawer(notifs) {
+  const lista = document.getElementById('notif-lista');
+  if (!lista) return;
+
+  if (!notifs.length) {
+    lista.innerHTML = '<div class="notif-vazia">Nenhuma notificação</div>';
+    return;
+  }
+
+  lista.innerHTML = notifs.map(n => `
+    <div class="notif-item${n.lida ? '' : ' notif-item--nao-lida'}" data-id="${esc(n._id)}">
+      <div class="notif-item__icone">${iconePorTipo(n.tipo)}</div>
+      <div class="notif-item__corpo">
+        <div class="notif-item__titulo">${esc(n.titulo || '')}</div>
+        <div class="notif-item__msg">${esc(n.mensagem || '')}</div>
+        <div class="notif-item__tempo">${formatarTempoAtras(n.criadaEm)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function iconePorTipo(tipo) {
+  const mapa = {
+    novo_cadastro:       '👤',
+    cadastro_aprovado:   '✅',
+    pontos_atualizados:  '⭐',
+    novo_resgate:        '💰',
+    resgate_finalizado:  '🎉',
+  };
+  return mapa[tipo] || '🔔';
+}
+
+function formatarTempoAtras(ts) {
+  if (!ts) return '';
+  const d   = ts.toDate ? ts.toDate() : new Date(ts);
+  const seg = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (seg < 60)    return 'agora';
+  if (seg < 3600)  return `${Math.floor(seg / 60)} min atrás`;
+  if (seg < 86400) return `${Math.floor(seg / 3600)} h atrás`;
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+async function marcarTodasLidas(ids) {
+  if (!ids?.length) return;
+  const batch = [];
+  ids.forEach(id => {
+    batch.push(updateDoc(doc(db, 'notificacoes', id), { lida: true }));
+  });
+  await Promise.all(batch).catch(err => console.error('marcarLidas:', err));
+}
+
+window.abrirDrawerNotif = function abrirDrawerNotif() {
+  const drawer    = document.getElementById('notif-drawer');
+  const backdrop  = document.getElementById('notif-backdrop');
+  if (!drawer) return;
+  drawer.classList.add('notif-drawer--aberto');
+  backdrop.classList.add('notif-backdrop--visivel');
+
+  // Marca como lidas as não lidas visíveis
+  const naoLidas = [...document.querySelectorAll('.notif-item--nao-lida')];
+  const ids = naoLidas.map(el => el.dataset.id).filter(Boolean);
+  if (ids.length) setTimeout(() => marcarTodasLidas(ids), 600);
+}
+
+window.fecharDrawerNotif = function() {
+  document.getElementById('notif-drawer')?.classList.remove('notif-drawer--aberto');
+  document.getElementById('notif-backdrop')?.classList.remove('notif-backdrop--visivel');
+};
+
 // ── NOTIFICAÇÕES IN-APP ───────────────────────────────────────────────────────
 // Grava um documento em /notificacoes.
 // Se destinatarioUid for fornecido, notifica aquele usuário específico.
