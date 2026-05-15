@@ -1,3 +1,31 @@
+// ── Firebase Messaging SW — deve ser importado antes de qualquer outro código ─
+// Habilita push notifications em background/app fechado
+importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey:            "AIzaSyCW2HG6ECzk6OD0cenYqY1R3rsJ1Oecgek",
+  authDomain:        "biovet-parceiro-vet.firebaseapp.com",
+  projectId:         "biovet-parceiro-vet",
+  storageBucket:     "biovet-parceiro-vet.firebasestorage.app",
+  messagingSenderId: "549792200166",
+  appId:             "1:549792200166:web:0cf14a3895227b79031227"
+});
+
+const messaging = firebase.messaging();
+
+// ── Background push — app fechado ou em background ────────────────────────────
+messaging.onBackgroundMessage(payload => {
+  const { title = 'Biovetfarma', body = '' } = payload.notification || {};
+  self.registration.showNotification(title, {
+    body,
+    icon:  '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    data:  payload.data || {}
+  });
+});
+
+// ── CACHE ─────────────────────────────────────────────────────────────────────
 const CACHE_NAME = 'biovet-v10';
 
 const STATIC_ASSETS = [
@@ -27,12 +55,12 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Firebase e APIs externas: sempre rede
+  // Firebase, FCM e APIs externas: sempre rede
   if (
     url.hostname.includes('firebaseio.com') ||
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('gstatic.com') ||
-    url.hostname.includes('emailjs.com') ||
+    url.hostname.includes('fcm.googleapis.com') ||
     url.hostname.includes('wa.me')
   ) {
     e.respondWith(fetch(e.request));
