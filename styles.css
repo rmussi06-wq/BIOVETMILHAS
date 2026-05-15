@@ -443,6 +443,24 @@ input:focus {
 .btn-icon-logout:hover  { color: var(--danger); border-color: #ffd0d0; background: #fff5f5; }
 .btn-icon-logout:active { transform: scale(0.92); }
 
+/* ── GUIA ──────────────────────────────────────────────────────────────────── */
+.btn-icon-guia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-md);
+  border: 2px solid var(--border-light);
+  background: var(--surface);
+  color: var(--text-soft);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s, transform 0.12s, border-color 0.15s;
+}
+.btn-icon-guia:hover  { color: var(--teal-dark); border-color: var(--border); background: var(--surface-alt); }
+.btn-icon-guia:active { transform: scale(0.92); }
+
 /* ── SINO ──────────────────────────────────────────────────────────────────── */
 .btn-icon-sino {
   position: relative;
