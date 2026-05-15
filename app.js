@@ -51,7 +51,7 @@ const WHATSAPP_NUMBER = '5514997132879';
 
 // FCM — preencha com a VAPID key gerada em Firebase Console →
 // Project Settings → Cloud Messaging → Web Push certificates → Generate key pair
-const FCM_VAPID_KEY = '';
+const FCM_VAPID_KEY = 'BH81Reb3fur3nveHNT2Gs3f6kenyEO93jv37csFRlxpDLIFHREjqhSQ9oopN6E4qt1Ywkf3azdHOCxZwKq8hNNA';
 
 // ── FIREBASE ──────────────────────────────────────────────────────────────────
 const fbApp     = initializeApp(firebaseConfig);
