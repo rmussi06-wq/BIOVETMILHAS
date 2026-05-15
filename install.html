@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+  <meta name="googlebot" content="noindex, nofollow">
+  <title>Biovetfarma</title>
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap">
+  <style>
+    /* ── Design system inline — independente do styles.css ────────────────── */
+    :root {
+      --teal:         #3CB3C0;
+      --teal-dark:    #1A7175;
+      --teal-deep:    #145a5e;
+      --bg:           #f4fbfc;
+      --surface:      #ffffff;
+      --border-light: #ddeef0;
+      --border:       #c8e2e5;
+      --text:         #1A3A3D;
+      --text-soft:    #4d7c80;
+      --text-muted:   #8ab5b8;
+      --font:         'Nunito', sans-serif;
+      --shadow-md:    0 4px 14px rgba(20,90,94,0.08), 0 2px 6px rgba(20,90,94,0.04);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px 48px;
+    }
+
+    .install-card {
+      background: var(--surface);
+      border-radius: 20px;
+      box-shadow: var(--shadow-md);
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .install-logo {
+      height: 52px;
+      margin-bottom: 24px;
+    }
+
+    .install-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .install-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* ── Passos (iOS Safari) ────────────────────────────────────────────── */
+    .steps { text-align: left; margin-bottom: 20px; }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      background: var(--teal);
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 800;
+    }
+    .step-body { flex: 1; }
+    .step-label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .step-desc {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      line-height: 1.45;
+    }
+    .step-icon { color: var(--teal); vertical-align: middle; }
+
+    /* ── Botão instalar (Android) ──────────────────────────────────────── */
+    .btn-install {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 0.95rem;
+      font-weight: 800;
+      padding: 14px 28px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--teal-deep), 0 6px 20px rgba(60,179,192,0.25);
+      width: 100%;
+      transition: filter 0.15s, transform 0.1s;
+      margin-bottom: 12px;
+    }
+    .btn-install:active  { transform: translateY(2px); box-shadow: 0 2px 0 var(--teal-deep); }
+    .btn-install:hover   { filter: brightness(1.06); }
+    .btn-install:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Caixa de instrução genérica ───────────────────────────────────── */
+    .info-box {
+      background: #f0f9fa;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      line-height: 1.6;
+      text-align: left;
+    }
+    .info-box strong { color: var(--teal-dark); }
+
+    /* ── Alerta (abrir no Safari) ──────────────────────────────────────── */
+    .safari-alert {
+      background: #fff8e6;
+      border: 1.5px solid #f5c842;
+      border-radius: 12px;
+      padding: 16px 18px;
+      font-size: 0.88rem;
+      color: #7a5c00;
+      line-height: 1.6;
+      text-align: left;
+    }
+    .safari-alert strong { color: #5a4200; }
+
+    /* ── Mensagem já instalado ─────────────────────────────────────────── */
+    .badge-instalado {
+      background: #dcfce7;
+      border: 1.5px solid #86efac;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #15803d;
+    }
+
+    .install-footer {
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="install-card">
+    <img src="/assets/logo-biovetfarma.png" class="install-logo" alt="Biovetfarma">
+    <h1 class="install-title">Acesso ao aplicativo Biovetfarma</h1>
+    <p class="install-subtitle">Adicione à sua tela inicial para acesso rápido</p>
+    <div id="install-content"><!-- preenchido pelo JS --></div>
+  </div>
+
+  <p class="install-footer">Biovetfarma — Manipulação Veterinária</p>
+
+  <script>
+    const ua           = navigator.userAgent;
+    const isIOS        = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isSafari     = isIOS && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+    const isAndroid    = /Android/.test(ua);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone === true;
+
+    const content = document.getElementById('install-content');
+    let deferredPrompt = null;
+
+    // ── Já instalado → redireciona ──────────────────────────────────────────
+    if (isStandalone) {
+      window.location.replace('/');
+    }
+
+    // ── Android — captura beforeinstallprompt ───────────────────────────────
+    else if (isAndroid) {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const btn = document.getElementById('btn-instalar');
+        if (btn) btn.disabled = false;
+      });
+
+      content.innerHTML = `
+        <button class="btn-install" id="btn-instalar" disabled onclick="instalarAndroid()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v13M8 11l4 4 4-4"/><rect x="2" y="17" width="20" height="5" rx="2"/>
+          </svg>
+          Instalar agora
+        </button>
+        <div class="info-box" id="android-manual" style="display:none">
+          <strong>Instalação manual:</strong><br>
+          1. Toque no menu <strong>⋮</strong> no canto superior direito<br>
+          2. Selecione <strong>"Adicionar à tela inicial"</strong><br>
+          3. Confirme tocando em <strong>"Adicionar"</strong>
+        </div>
+      `;
+
+      // Se o prompt não disparar em 3s, exibe instruções manuais
+      setTimeout(() => {
+        if (!deferredPrompt) {
+          const btn = document.getElementById('btn-instalar');
+          const manual = document.getElementById('android-manual');
+          if (btn) btn.style.display = 'none';
+          if (manual) manual.style.display = 'block';
+        }
+      }, 3000);
+    }
+
+    // ── iOS + Safari — tutorial passo a passo ──────────────────────────────
+    else if (isIOS && isSafari) {
+      content.innerHTML = `
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-label">
+                Toque no ícone de compartilhar
+                <svg class="step-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                  <polyline points="16 6 12 2 8 6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <div class="step-desc">Barra inferior do Safari, ao centro</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-label">Toque em "Adicionar à Tela de Início"</div>
+              <div class="step-desc">Role a lista de opções para baixo até encontrar</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-label">Toque em "Adicionar"</div>
+              <div class="step-desc">Canto superior direito da janela de confirmação</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ── iOS + outro navegador — pede para abrir no Safari ──────────────────
+    else if (isIOS && !isSafari) {
+      content.innerHTML = `
+        <div class="safari-alert">
+          <strong>⚠️ Abra esta página no Safari</strong><br><br>
+          A instalação em iPhone e iPad só é possível pelo Safari.<br><br>
+          Copie o endereço abaixo e cole na barra de endereço do Safari:
+          <br><br>
+          <strong>app.biovetfarma.com.br/install</strong>
+        </div>
+      `;
+    }
+
+    // ── Desktop — instrução genérica ────────────────────────────────────────
+    else {
+      content.innerHTML = `
+        <div class="info-box">
+          <strong>Instalar no computador:</strong><br><br>
+          Clique no ícone de instalação <strong>⊕</strong> ou <strong>⬇</strong>
+          que aparece na barra de endereço do navegador.<br><br>
+          Se não aparecer, acesse pelo celular para a melhor experiência.
+        </div>
+      `;
+    }
+
+    // ── Dispara instalação Android ──────────────────────────────────────────
+    function instalarAndroid() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choice) => {
+        if (choice.outcome === 'accepted') {
+          document.getElementById('install-content').innerHTML =
+            '<div class="badge-instalado">✅ Instalado com sucesso! Abra o app pela tela inicial.</div>';
+        }
+        deferredPrompt = null;
+      });
+    }
+  </script>
+
+</body>
+</html>

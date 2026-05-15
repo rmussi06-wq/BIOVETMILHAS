@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /install
+Disallow: /install.html
+
+User-agent: Googlebot
+Disallow: /install
+Disallow: /install.html
