@@ -567,8 +567,7 @@ async function salvarPontosModal() {
 
     // Notifica o veterinário que seus pontos foram atualizados
     await criarNotificacao({
-      destinatarioUid:  currentEditUid,
-      destinatarioRole: 'vet',
+      destinatarioUid: currentEditUid,
       tipo:     'pontos_atualizados',
       titulo:   'Sua pontuação foi atualizada',
       mensagem: `Seu saldo foi atualizado para ${val.toLocaleString('pt-BR')} pontos.`,
@@ -594,8 +593,7 @@ window.toggleAprovacao = async function(uid, aprovar) {
     // Notifica o veterinário sobre aprovação ou revogação
     if (aprovar) {
       await criarNotificacao({
-        destinatarioUid:  uid,
-        destinatarioRole: 'vet',
+        destinatarioUid: uid,
         tipo:     'cadastro_aprovado',
         titulo:   'Cadastro aprovado!',
         mensagem: 'Seu cadastro no Biovet Pontos foi aprovado. Bem-vindo!',
@@ -793,24 +791,24 @@ window.confirmarFinalizarResgate = async function() {
     });
 
     // Notifica o veterinário que o resgate foi finalizado
-    await criarNotificacao({
-      destinatarioUid:  resgate.vetUid,
-      destinatarioRole: 'vet',
-      tipo:     'resgate_finalizado',
-      titulo:   'Resgate de pontos finalizado',
-      mensagem: `Seu resgate de ${(resgate.pontosResgatados || 0).toLocaleString('pt-BR')} pts foi processado com sucesso.`,
-      metadata: { resgateId: rid, pontosResgatados: resgate.pontosResgatados }
-    });
+    if (resgate.vetUid) {
+      await criarNotificacao({
+        destinatarioUid: resgate.vetUid,
+        tipo:     'resgate_finalizado',
+        titulo:   'Resgate de pontos finalizado',
+        mensagem: `Seu resgate de ${(resgate.pontosResgatados || 0).toLocaleString('pt-BR')} pontos foi processado com sucesso.`,
+        metadata: { resgateId: rid, pontosResgatados: resgate.pontosResgatados }
+      });
+    }
 
     // Notifica o dashboard que solicitou o resgate
     if (resgate.solicitadoPor?.uid) {
       await criarNotificacao({
-        destinatarioUid:  resgate.solicitadoPor.uid,
-        destinatarioRole: 'dashboard',
+        destinatarioUid: resgate.solicitadoPor.uid,
         tipo:     'resgate_finalizado',
-        titulo:   'Resgate finalizado pelo admin',
-        mensagem: `O resgate de ${(resgate.pontosResgatados || 0).toLocaleString('pt-BR')} pts de ${resgate.vetNome} foi aprovado.`,
-        metadata: { resgateId: rid, vetNome: resgate.vetNome }
+        titulo:   'Resgate finalizado',
+        mensagem: 'O resgate solicitado foi finalizado pelo administrador.',
+        metadata: { resgateId: rid }
       });
     }
 
@@ -1434,14 +1432,13 @@ window.fecharDrawerNotif = function() {
 };
 
 // ── NOTIFICAÇÕES IN-APP ───────────────────────────────────────────────────────
-// Grava um documento em /notificacoes.
-// Se destinatarioUid for fornecido, notifica aquele usuário específico.
-// Se apenas destinatarioRole, notifica todos da role via broadcast.
-async function criarNotificacao({ destinatarioUid = null, destinatarioRole, tipo, titulo, mensagem, metadata = {} }) {
+// Se destinatarioUid for fornecido, destinatarioRole é forçado a null
+// (evita vazamento via broadcast). Broadcast só ocorre quando uid é null.
+async function criarNotificacao({ destinatarioUid = null, destinatarioRole = null, tipo, titulo, mensagem, metadata = {} }) {
   try {
     await addDoc(collection(db, 'notificacoes'), {
       destinatarioUid,
-      destinatarioRole,
+      destinatarioRole: destinatarioUid ? null : destinatarioRole,
       tipo,
       titulo,
       mensagem,
