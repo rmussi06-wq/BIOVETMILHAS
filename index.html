@@ -6,6 +6,17 @@
   <title>Biovetfarma — Parceiro Vet</title>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="win95.css"/>
+  <script>
+    /* Tema Windows 95 opcional: ?tema=win95 liga, ?tema=normal desliga (fica salvo no aparelho) */
+    (function () {
+      try {
+        var t = new URLSearchParams(location.search).get('tema');
+        if (t) localStorage.setItem('biovet-tema', t);
+        if ((t || localStorage.getItem('biovet-tema')) === 'win95') document.documentElement.classList.add('win95');
+      } catch (e) {}
+    })();
+  </script>
   <meta name="theme-color" content="#3CB3C0"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
@@ -605,6 +616,21 @@
       <div class="notif-vazia">Nenhuma notificação</div>
     </div>
   </aside>
+
+  <!-- Barra de tarefas (só aparece no tema Windows 95) -->
+  <div class="w95-taskbar" aria-hidden="true">
+    <button class="w95-start" type="button" tabindex="-1"><img src="assets/logo-biovetfarma.png" alt="">Iniciar</button>
+    <span class="w95-task">Biovet Pontos</span>
+    <span class="w95-clock" id="w95-clock"></span>
+  </div>
+  <script>
+    (function () {
+      if (!document.documentElement.classList.contains('win95')) return;
+      var el = document.getElementById('w95-clock');
+      function tick() { var d = new Date(); el.textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+      tick(); setInterval(tick, 15000);
+    })();
+  </script>
 
   <script type="module" src="app.js"></script>
   <!-- Toast de atualização do SW (criado dinamicamente pelo app.js) -->

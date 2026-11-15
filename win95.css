@@ -1,0 +1,377 @@
+/* ═══════════════════════════════════════════════════
+   BIOVET PONTOS — Tema "Windows 95" (opcional)
+   Ativa só quando <html> tem a classe .win95
+   (acesse com ?tema=win95 · volte com ?tema=normal)
+   ═══════════════════════════════════════════════════ */
+
+html.win95 {
+  --w95-desk:   #008080;
+  --w95-face:   #c0c0c0;
+  --w95-light:  #dfdfdf;
+  --w95-white:  #ffffff;
+  --w95-shadow: #808080;
+  --w95-dark:   #0a0a0a;
+  --w95-navy:   #000080;
+  --w95-navy-2: #1084d0;
+  --w95-font:   "MS Sans Serif", "Microsoft Sans Serif", "Pixelated MS Sans Serif", Tahoma, Geneva, Verdana, sans-serif;
+
+  --w95-raised:  inset -1px -1px var(--w95-dark), inset 1px 1px var(--w95-white),
+                 inset -2px -2px var(--w95-shadow), inset 2px 2px var(--w95-light);
+  --w95-pressed: inset -1px -1px var(--w95-white), inset 1px 1px var(--w95-dark),
+                 inset -2px -2px var(--w95-light), inset 2px 2px var(--w95-shadow);
+  --w95-sunken:  inset -1px -1px var(--w95-white), inset 1px 1px var(--w95-shadow),
+                 inset -2px -2px var(--w95-light), inset 2px 2px var(--w95-dark);
+
+  --font: var(--w95-font);
+  --text: #000;
+  --text-soft: #000;
+  --text-muted: #808080;
+  --surface: var(--w95-face);
+  --bg: var(--w95-desk);
+}
+
+html.win95 body {
+  background: var(--w95-desk);
+  color: #000;
+  font-size: 15px;
+  -webkit-font-smoothing: none;
+}
+
+/* Sem animações "modernas" */
+html.win95 *,
+html.win95 *::before,
+html.win95 *::after {
+  border-radius: 0 !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html.win95 .greeting-section,
+html.win95 .pontos-card,
+html.win95 .welcome-hero,
+html.win95 .welcome-actions,
+html.win95 .form,
+html.win95 .tab-panel,
+html.win95 .modal-box,
+html.win95 .welcome-logo { animation: none !important; }
+
+/* ── SPLASH: tela de boot ───────────────────────────── */
+html.win95 .splash { background: var(--w95-desk); }
+html.win95 .splash-logo { filter: none; image-rendering: pixelated; width: 120px; height: 120px; }
+html.win95 .splash-tagline { font-weight: 700; font-size: 1.1rem; color: #fff; }
+html.win95 .splash-dots { gap: 3px; padding: 3px; background: var(--w95-face); box-shadow: var(--w95-sunken); width: 180px; height: 22px; }
+html.win95 .splash-dots span {
+  width: auto; height: 100%; flex: 1;
+  background: var(--w95-navy); opacity: 1;
+  animation: w95Progress 1.2s steps(1) infinite;
+}
+html.win95 .splash-dots span:nth-child(2) { animation-delay: .4s; }
+html.win95 .splash-dots span:nth-child(3) { animation-delay: .8s; }
+@keyframes w95Progress { 0% { opacity: 0; } 33% { opacity: 1; } }
+
+/* ── VIEWS = área de trabalho ───────────────────────── */
+html.win95 #auth-view,
+html.win95 #home-view,
+html.win95 #admin-view,
+html.win95 #dashboard-view { background: var(--w95-desk); padding-bottom: 44px; }
+
+/* Shells viram janelas */
+html.win95 .welcome-panel,
+html.win95 .forms-panel,
+html.win95 .home-shell,
+html.win95 .admin-shell,
+html.win95 .dashboard-shell {
+  background: var(--w95-face);
+  box-shadow: var(--w95-raised);
+  padding: 3px 3px 16px;
+  margin: max(env(safe-area-inset-top), 12px) auto 12px;
+  min-height: auto;
+  width: calc(100% - 16px);
+}
+html.win95 .welcome-panel,
+html.win95 .forms-panel { gap: 20px; justify-content: flex-start; padding-bottom: 20px; }
+
+/* Barra de título da janela */
+html.win95 .welcome-panel::before,
+html.win95 .forms-panel::before,
+html.win95 .home-shell::before,
+html.win95 .admin-shell::before,
+html.win95 .dashboard-shell::before {
+  display: block;
+  content: "Biovet Pontos";
+  height: 22px;
+  line-height: 22px;
+  padding: 0 64px 0 26px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background:
+    /* botões _ □ ✕ desenhados à direita */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='14'%3E%3Cg shape-rendering='crispEdges'%3E%3Crect width='16' height='14' fill='%23c0c0c0'/%3E%3Crect x='18' width='16' height='14' fill='%23c0c0c0'/%3E%3Crect x='38' width='16' height='14' fill='%23c0c0c0'/%3E%3Cpath d='M0 0h15v1H1v12H0zM18 0h15v1H19v12h-1zM38 0h15v1H39v12h-1z' fill='%23fff'/%3E%3Cpath d='M15 0h1v14H0v-1h15zM33 0h1v14H18v-1h15zM53 0h1v14H38v-1h15z' fill='%23000'/%3E%3Crect x='4' y='9' width='6' height='2'/%3E%3Crect x='22' y='3' width='8' height='7' fill='none' stroke='%23000'/%3E%3Crect x='22' y='3' width='8' height='2'/%3E%3Cpath d='M42 3l6 7M48 3l-6 7' stroke='%23000' stroke-width='1.6'/%3E%3C/g%3E%3C/svg%3E") right 3px center / 54px 14px no-repeat,
+    /* ícone à esquerda */
+    url("assets/logo-biovetfarma.png") 4px center / 16px 16px no-repeat,
+    linear-gradient(90deg, var(--w95-navy), var(--w95-navy-2));
+  margin: 0 0 6px;
+}
+html.win95 .forms-panel::before  { content: "Entrar no Biovet Pontos"; }
+html.win95 .admin-shell::before  { content: "Painel do Administrador"; }
+html.win95 .dashboard-shell::before { content: "Painel — Dashboard"; }
+
+html.win95 .home-shell > *:not(.app-header),
+html.win95 .admin-shell > *:not(.app-header),
+html.win95 .dashboard-shell > *:not(.app-header),
+html.win95 .welcome-panel > *,
+html.win95 .forms-panel > * { margin-left: 10px; margin-right: 10px; }
+
+/* Cabeçalho vira barra de ferramentas */
+html.win95 .app-header {
+  padding: 2px 6px 4px;
+  border-bottom: 1px solid var(--w95-shadow);
+  box-shadow: 0 1px 0 var(--w95-white);
+}
+html.win95 .header-logo { width: 34px; height: 34px; image-rendering: pixelated; }
+
+/* ── TIPOGRAFIA ─────────────────────────────────────── */
+html.win95 .welcome-title,
+html.win95 .form-title,
+html.win95 .greeting-name,
+html.win95 .section-title,
+html.win95 .modal-title { color: #000; letter-spacing: 0; font-weight: 700; }
+html.win95 .welcome-title  { font-size: 1.6rem; }
+html.win95 .greeting-label { font-weight: 400; color: #000; }
+html.win95 .greeting-name  { font-size: 1.35rem; }
+html.win95 .greeting-section { padding: 14px 0 0; }
+html.win95 .welcome-logo { filter: none; width: 110px; height: 110px; image-rendering: pixelated; }
+html.win95 label { color: #000; font-weight: 400; text-transform: none; letter-spacing: 0; font-size: .9rem; }
+html.win95 .form-desc,
+html.win95 .section-desc,
+html.win95 .modal-subtitle { color: #000; font-weight: 400; }
+
+/* ── BOTÕES 3D ──────────────────────────────────────── */
+html.win95 .btn,
+html.win95 .btn-sm,
+html.win95 .tab-btn,
+html.win95 .btn-back,
+html.win95 .btn-icon-guia,
+html.win95 .btn-icon-sino,
+html.win95 .btn-icon-logout,
+html.win95 .btn-ver-comprovante,
+html.win95 .notif-drawer__fechar {
+  font-family: var(--w95-font);
+  background: var(--w95-face) !important;
+  color: #000 !important;
+  border: none !important;
+  box-shadow: var(--w95-raised) !important;
+  filter: none !important;
+  transform: none !important;
+  font-weight: 400;
+  letter-spacing: 0;
+  transition: none;
+}
+html.win95 .btn:active,
+html.win95 .btn-sm:active,
+html.win95 .tab-btn:active,
+html.win95 .btn-back:active,
+html.win95 .btn-icon-guia:active,
+html.win95 .btn-icon-sino:active,
+html.win95 .btn-icon-logout:active,
+html.win95 .btn-ver-comprovante:active { box-shadow: var(--w95-pressed) !important; padding-top: 2px; }
+
+html.win95 .btn { min-height: 40px; text-transform: none; }
+html.win95 .btn-tall { min-height: 44px; }
+html.win95 .btn:focus-visible { outline: 1px dotted #000; outline-offset: -5px; }
+
+/* Botão padrão (primário) ganha a borda preta extra do Win95 */
+html.win95 .btn-primary {
+  font-weight: 700;
+  box-shadow: 0 0 0 1px #000, var(--w95-raised) !important;
+}
+html.win95 .btn-ghost { box-shadow: none !important; background: transparent !important; text-decoration: underline; min-height: 32px; }
+html.win95 .btn-ghost:active { box-shadow: none !important; }
+html.win95 .btn-whatsapp { font-weight: 700; margin-top: 4px; width: auto; align-self: stretch; }
+html.win95 .btn-whatsapp svg { color: #128C7E; }
+
+html.win95 .btn-icon-guia,
+html.win95 .btn-icon-sino,
+html.win95 .btn-icon-logout,
+html.win95 .btn-back { width: 36px; height: 34px; }
+
+html.win95 .sino-badge { border: 1px solid #000; background: #ff0000; font-family: var(--w95-font); }
+
+/* ── CAMPOS AFUNDADOS ──────────────────────────────── */
+html.win95 input,
+html.win95 select,
+html.win95 textarea,
+html.win95 .search-input {
+  font-family: var(--w95-font);
+  background: #fff !important;
+  color: #000;
+  border: none !important;
+  box-shadow: var(--w95-sunken) !important;
+  height: 34px;
+  padding: 0 8px;
+  font-weight: 400;
+}
+html.win95 input:focus,
+html.win95 .search-input:focus { box-shadow: var(--w95-sunken) !important; outline: none; }
+html.win95 input::placeholder { color: var(--w95-shadow); font-weight: 400; }
+html.win95 .btn-eye { color: #000; }
+
+/* Mensagens viram caixinhas de diálogo */
+html.win95 .form-msg.visible { background: #fff; box-shadow: var(--w95-sunken); border: none; font-weight: 400; padding: 8px 10px; }
+html.win95 .form-msg.error::before   { content: "⛔ "; }
+html.win95 .form-msg.success::before { content: "✔ "; }
+html.win95 .form-msg.error   { color: #800000; }
+html.win95 .form-msg.success { color: #006400; }
+
+/* ── CARTÃO DE PONTOS = sub-janela ─────────────────── */
+html.win95 .pontos-card {
+  background: var(--w95-face);
+  box-shadow: var(--w95-raised);
+  padding: 3px;
+  margin: 16px 10px 14px;
+  overflow: visible;
+}
+html.win95 .pontos-card-shine,
+html.win95 .pontos-card::after { display: none; }
+html.win95 .pontos-card::before {
+  content: "Meus Pontos";
+  position: static;
+  display: block;
+  width: auto; height: 20px; line-height: 20px;
+  padding: 0 6px;
+  font-size: 12px; font-weight: 700; color: #fff;
+  background: linear-gradient(90deg, var(--w95-navy), var(--w95-navy-2));
+}
+html.win95 .pontos-card-content { padding: 10px 10px 8px; min-height: 0; gap: 10px; }
+html.win95 .pontos-badge {
+  background: none; border: none; color: #000; padding: 0;
+  font-weight: 700; letter-spacing: 0; font-size: .8rem;
+}
+html.win95 .pontos-card-middle {
+  background: #000;
+  box-shadow: var(--w95-sunken);
+  padding: 10px 12px 8px;
+  align-items: flex-end;
+}
+html.win95 .pontos-label { color: #00ff00; letter-spacing: 0; font-weight: 400; text-transform: none; align-self: flex-start; }
+html.win95 .pontos-value {
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+  color: #00ff00;
+  font-size: 3rem;
+  letter-spacing: 0;
+}
+html.win95 .pontos-unit { color: #00c000; font-weight: 400; }
+html.win95 .pontos-card-bottom { border-top: 1px solid var(--w95-shadow); box-shadow: inset 0 1px 0 #fff; padding-top: 8px; }
+html.win95 .pontos-field-label { color: #000; font-weight: 400; letter-spacing: 0; text-transform: none; }
+html.win95 .pontos-field-label::after { content: ":"; }
+html.win95 .pontos-field-value { color: #000; font-weight: 700; }
+
+/* ── LETREIRO ───────────────────────────────────────── */
+html.win95 .flight-board {
+  background: #000;
+  color: #ffff00;
+  box-shadow: var(--w95-sunken);
+  height: 36px;
+  font-size: 13px;
+}
+
+/* ── CARROSSEL ─────────────────────────────────────── */
+html.win95 .carousel { box-shadow: var(--w95-sunken); padding: 2px; background: var(--w95-face); }
+html.win95 .carousel-dots { background: var(--w95-face); }
+html.win95 .carousel-dot { width: 10px; height: 10px; box-shadow: var(--w95-raised); background: var(--w95-face); }
+html.win95 .carousel-dot.active { background: var(--w95-navy); transform: none; }
+
+/* ── ABAS (admin) ──────────────────────────────────── */
+html.win95 .tab-bar { background: transparent; box-shadow: none; padding: 0; gap: 2px; margin: 14px 10px 0; border-bottom: 1px solid #fff; }
+html.win95 .tab-btn { padding: 6px 10px; flex: 0 1 auto; }
+html.win95 .tab-btn--active { font-weight: 700; margin-bottom: -2px; padding-bottom: 8px; }
+html.win95 .tab-panel { padding-top: 12px; }
+
+/* ── CARDS / LISTAS ────────────────────────────────── */
+html.win95 .user-card,
+html.win95 .resgate-card,
+html.win95 .dash-user-card,
+html.win95 .dash-resgate-card,
+html.win95 .cotacao-card,
+html.win95 .carousel-slot {
+  background: #fff;
+  border: none;
+  box-shadow: var(--w95-sunken);
+}
+html.win95 .status-badge,
+html.win95 .badge-status,
+html.win95 .role-badge {
+  background: var(--w95-face) !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+html.win95 .role-badge--admin { background: #ffff80 !important; }
+html.win95 .empty-state { color: #000; }
+html.win95 .empty-state::before { content: "⏳ "; }
+
+/* ── MODAIS = caixa de diálogo ─────────────────────── */
+html.win95 .modal-overlay { background: transparent; animation: none; }
+html.win95 .modal-box {
+  background: var(--w95-face);
+  box-shadow: var(--w95-raised), 4px 4px 0 rgba(0,0,0,.35);
+  padding: 3px 12px 12px;
+  gap: 12px;
+}
+html.win95 .modal-box::before {
+  content: "Biovet Pontos";
+  display: block;
+  margin: 0 -9px 4px;
+  height: 20px; line-height: 20px; padding: 0 6px;
+  font-size: 12px; font-weight: 700; color: #fff;
+  background: linear-gradient(90deg, var(--w95-navy), var(--w95-navy-2));
+}
+
+/* ── NOTIFICAÇÕES ──────────────────────────────────── */
+html.win95 .notif-backdrop { background: transparent; }
+html.win95 .notif-drawer { background: var(--w95-face); box-shadow: var(--w95-raised); transition: none; }
+html.win95 .notif-drawer__head { background: linear-gradient(90deg, var(--w95-navy), var(--w95-navy-2)); padding: 3px 4px 3px 8px; border: none; }
+html.win95 .notif-drawer__titulo { color: #fff; font-size: 13px; }
+html.win95 .notif-drawer__fechar { width: 20px; height: 18px; font-size: 14px; line-height: 14px; padding: 0; }
+html.win95 .notif-lista { background: #fff; box-shadow: var(--w95-sunken); margin: 6px; }
+html.win95 .notif-item { border-bottom: 1px dotted var(--w95-shadow); }
+html.win95 .notif-item--nao-lida { background: #ffffe1; }
+html.win95 .notif-item:hover { background: var(--w95-navy); }
+html.win95 .notif-item:hover * { color: #fff !important; }
+html.win95 .fcm-toast { background: #ffffe1 !important; color: #000 !important; border: 1px solid #000 !important; box-shadow: 2px 2px 0 rgba(0,0,0,.4) !important; font-family: var(--w95-font); }
+
+/* ── BARRA DE TAREFAS ──────────────────────────────── */
+.w95-taskbar { display: none; }
+html.win95 .w95-taskbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 150;
+  display: flex; align-items: center; gap: 4px;
+  height: calc(34px + env(safe-area-inset-bottom));
+  padding: 3px 3px calc(3px + env(safe-area-inset-bottom));
+  background: var(--w95-face);
+  box-shadow: inset 0 1px var(--w95-light), inset 0 2px #fff;
+  font-family: var(--w95-font);
+  font-size: 13px;
+}
+html.win95 .w95-start {
+  display: flex; align-items: center; gap: 4px;
+  height: 26px; padding: 0 6px;
+  font: 700 13px var(--w95-font);
+  background: var(--w95-face); border: none; color: #000;
+  box-shadow: var(--w95-raised);
+}
+html.win95 .w95-start img { width: 18px; height: 18px; }
+html.win95 .w95-task {
+  flex: 0 1 160px; height: 26px; line-height: 26px; padding: 0 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  box-shadow: var(--w95-pressed);
+  background: repeating-conic-gradient(#fff 0 25%, var(--w95-face) 0 50%) 0 0 / 2px 2px;
+  font-weight: 700;
+}
+html.win95 .w95-clock {
+  margin-left: auto; height: 26px; line-height: 26px; padding: 0 10px;
+  box-shadow: inset -1px -1px #fff, inset 1px 1px var(--w95-shadow);
+}
