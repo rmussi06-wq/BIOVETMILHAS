@@ -26,12 +26,13 @@ messaging.onBackgroundMessage(payload => {
 });
 
 // ── CACHE ─────────────────────────────────────────────────────────────────────
-const CACHE_NAME = 'biovet-v11';
+const CACHE_NAME = 'biovet-v12';
 
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
+  '/win95.css',
   '/app.js',
   '/assets/logo-biovetfarma.png'
 ];
